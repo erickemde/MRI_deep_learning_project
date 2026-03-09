@@ -1,0 +1,34 @@
+name: eda
+
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  # Python
+  - python=3.12
+
+  # Core data
+  - numpy
+  - pandas
+  # - scipy
+
+  # Visualization
+  - matplotlib
+  - seaborn
+  # - plotly
+
+  # EDA utilities
+  - scikit-learn    # preprocessing, quick modeling
+  # - statsmodels     # statistical tests and summaries
+
+  # Dev tools
+  - ipykernel       # register environment as a Jupyter kernel
+
+  # Pip-installed packages
+  - pip
+  - pip:
+    - jupyter
+    # - jupyterlab
+    # - ydata-profiling   # one-line EDA reports (replaces pandas-profiling)
+    # - missingno          # missing data visualization
