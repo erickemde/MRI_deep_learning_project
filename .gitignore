@@ -3,6 +3,7 @@
 *.tsv
 *.jpg
 data/
+data_raw/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

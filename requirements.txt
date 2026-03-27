@@ -6,3 +6,4 @@ pandas
 imagehash
 Pillow
 matplotlib
+kaggle
