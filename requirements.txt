@@ -8,3 +8,7 @@ Pillow
 matplotlib
 kaggle
 ipykernel
+pyyaml
+lightning
+tensorboard
+wandb

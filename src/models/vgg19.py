@@ -32,7 +32,7 @@ class VGGModel(nn.Module):
 
         # replace last 2 conv blocks with self-attention blocks
         if self_attention:
-            pass
+            raise NotImplementedError("Self-attention blocks not yet implemented")
     
     def forward(self, x):
         return self.vgg(x)
@@ -41,7 +41,7 @@ class VGGModel(nn.Module):
 class SABlock(nn.Module):
     def __init__(self):
         super().__init__()
-        pass
+        raise NotImplementedError("Self-attention blocks not yet implemented")
 
     def forward(self, x):
-        pass
+        raise NotImplementedError("Self-attention blocks not yet implemented")
