@@ -16,7 +16,7 @@ def simple_train(model, train_dataloader, val_dataloader, epochs=10):
     tb_logger = TensorBoardLogger(save_dir="logs/", name="my_model")
     loggers = [tb_logger]
     try:
-        wandb_logger = WandbLogger(project = "my_project_name", log_model="all")
+        wandb_logger = WandbLogger(project = "deep_learning_project", log_model="all")
         loggers.append(wandb_logger)
     except Exception:
         print("Wandb not available, logging to Tensorboard only.")
