@@ -14,15 +14,22 @@ def simple_train(model, train_dataloader, val_dataloader, epochs=10):
     """
 
     tb_logger = TensorBoardLogger(save_dir="logs/", name="my_model")
+    lr_callback = LearningRateMonitor(logging_interval="step")
     loggers = [tb_logger]
+    callbacks = [lr_callback]
     try:
         wandb_logger = WandbLogger(project = "deep_learning_project", log_model="all")
         loggers.append(wandb_logger)
     except Exception:
         print("Wandb not available, logging to Tensorboard only.")
 
-    trainer = Trainer(max_epochs=epochs, accelerator="auto", logger=loggers)
-    trainer.fit(model, train_dataloader, val_dataloader)
+    trainer = Trainer(
+        max_epochs=epochs, 
+        accelerator="auto", 
+        logger=loggers,
+        callbacks=callbacks
+    )
+    trainer.fit(model, train_dataloader, val_dataloader, epochs=epochs)
 
 if __name__=="__main__":
 
