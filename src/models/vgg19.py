@@ -2,24 +2,21 @@ import torchvision
 from torch import nn
 import torch
 
+BATCH_NORM = {
+    True: (torchvision.models.vgg19_bn, torchvision.models.VGG19_BN_Weights.DEFAULT),
+    False: (torchvision.models.vgg19, torchvision.models.VGG19_Weights.DEFAULT)
+}
+
 # VGG Model Class
 class VGGModel(nn.Module):
     def __init__(self, pretrained=True, batch_norm = True, freeze = True, self_attention=False):
         super().__init__()
 
-        # download vgg model
-        if batch_norm:
-            model = torchvision.models.vgg19_bn
-            weights = torchvision.models.VGG19_BN_Weights.DEFAULT
-        else:
-            model = torchvision.models.vgg19
-            weights = torchvision.models.VGG19_Weights.DEFAULT
-
-        # get weights for vgg model
-        weights = weights if pretrained else None
+        # model selection
+        model, weights = BATCH_NORM[batch_norm]
 
         # initialize vgg model
-        self.vgg = model(weights=weights)
+        self.vgg = model(weights=weights if pretrained else None)
 
         # freeze parameter updates
         if freeze: 
