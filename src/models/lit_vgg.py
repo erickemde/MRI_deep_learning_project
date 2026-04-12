@@ -5,13 +5,14 @@ from torch import nn
 from torchmetrics import Accuracy
 
 class LitVGG(L.LightningModule):
-    def __init__(self, model, optimizer = optim.Adam, lr=1e-3):
+    def __init__(self, model = VGGModel(), optimizer = optim.Adam, scheduler = optim.lr_scheduler.OneCycleLR, lr=1e-3):
         super().__init__()
         self.save_hyperparameters(ignore=["model"])
         self.model = model
         self.loss_fn = nn.CrossEntropyLoss()
         self.lr = lr
         self.optimizer = optimizer
+        self.scheduler = scheduler
         self.train_acc = Accuracy(task="multiclass", num_classes=4)
         self.val_acc = Accuracy(task="multiclass", num_classes=4)
 
@@ -36,4 +37,17 @@ class LitVGG(L.LightningModule):
         return loss
     
     def configure_optimizers(self):
-        return self.optimizer(self.parameters(), lr=self.hparams.lr)
+        optimizer = self.optimizer(self.parameters(), lr=self.lr)
+        scheduler = self.scheduler(
+            optimizer,
+            max_lr=self.lr,
+            total_steps=self.trainer.estimated_stepping_batches
+        )
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": scheduler,
+                "interval": "step",
+                "frequency": 1,
+            }
+        }
