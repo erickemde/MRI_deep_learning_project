@@ -1,10 +1,11 @@
 import torch
 from torch.utils.data import DataLoader
 import torchvision
-from torchvision import datasets, transforms
+from torchvision import datasets
+from torchvision.transforms import v2
 from lightning.pytorch import Trainer
 from lightning.pytorch.loggers import TensorBoardLogger, WandbLogger
-from src.models.vgg19 import VGGModel
+from lightning.pytorch.callbacks import LearningRateMonitor
 from src.models.lit_vgg import LitVGG
 torch.set_float32_matmul_precision('high')
 
