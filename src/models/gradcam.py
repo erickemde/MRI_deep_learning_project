@@ -17,7 +17,7 @@ class GradCAM:
             self.gradients = grad_out[0]
 
         self.target_layer.register_forward_hook(forward_hook)
-        self.target_layer.register_backward_hook(backward_hook)
+        self.target_layer.register_full_backward_hook(backward_hook)
 
     def generate(self, x, class_idx=None):
         self.model.eval()
@@ -31,7 +31,6 @@ class GradCAM:
 
         weights = self.gradients.mean(dim=[2,3], keepdim=True)
         cam = (weights*self.activations).sum(dim=1, keepdim=True)
-
         cam = torch.relu(cam)
 
         return cam
