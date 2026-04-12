@@ -2,7 +2,6 @@ import torch
 from torch.utils.data import DataLoader
 import torchvision
 from torchvision import datasets
-from torchvision.transforms import v2
 from lightning.pytorch import Trainer
 from lightning.pytorch.loggers import TensorBoardLogger, WandbLogger
 from lightning.pytorch.callbacks import LearningRateMonitor
@@ -30,12 +29,11 @@ def simple_train(model, train_dataloader, val_dataloader, epochs=10):
         logger=loggers,
         callbacks=callbacks
     )
-    trainer.fit(model, train_dataloader, val_dataloader, epochs=epochs)
+    trainer.fit(model, train_dataloader, val_dataloader)
 
 if __name__=="__main__":
 
-    model = VGGModel()
-    model = LitVGG(model)
+    model = LitVGG()
 
     data_transforms = torchvision.models.VGG19_BN_Weights.DEFAULT.transforms()
     
