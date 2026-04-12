@@ -4,7 +4,7 @@ import torchvision
 from torchvision import datasets
 from lightning.pytorch import Trainer
 from lightning.pytorch.loggers import TensorBoardLogger, WandbLogger
-from lightning.pytorch.callbacks import LearningRateMonitor
+from lightning.pytorch.callbacks import ModelCheckpoint, LearningRateMonitor
 from src.models.lit_vgg import LitVGG
 torch.set_float32_matmul_precision('high')
 
@@ -15,8 +15,15 @@ def simple_train(model, train_dataloader, val_dataloader, epochs=10):
 
     tb_logger = TensorBoardLogger(save_dir="logs/", name="my_model")
     lr_callback = LearningRateMonitor(logging_interval="step")
+    ckpt_callback = ModelCheckpoint(
+        dirpath="checkpoints",
+        filename="sample-vgg19-{epoch}-{val_loss:.2f}",
+        monitor="val_loss",
+        save_top_k=3,
+        mode="min"
+    )
     loggers = [tb_logger]
-    callbacks = [lr_callback]
+    callbacks = [lr_callback, ckpt_callback]
     try:
         wandb_logger = WandbLogger(project = "deep_learning_project", log_model="all")
         loggers.append(wandb_logger)
