@@ -12,8 +12,7 @@ def simple_train(model, train_dataloader, val_dataloader, epochs=10):
     """
     Train Model using Pytorch Lightning Framework to simplify training code
     """
-
-    tb_logger = TensorBoardLogger(save_dir="logs/", name="my_model")
+    # create callbacks
     lr_callback = LearningRateMonitor(logging_interval="step")
     ckpt_callback = ModelCheckpoint(
         dirpath="checkpoints",
@@ -22,14 +21,18 @@ def simple_train(model, train_dataloader, val_dataloader, epochs=10):
         save_top_k=3,
         mode="min"
     )
-    loggers = [tb_logger]
     callbacks = [lr_callback, ckpt_callback]
+
+    # create loggers
+    tb_logger = TensorBoardLogger(save_dir="logs/", name="my_model")
+    loggers = [tb_logger]
     try:
         wandb_logger = WandbLogger(project = "deep_learning_project", log_model="all")
         loggers.append(wandb_logger)
     except Exception:
         print("Wandb not available, logging to Tensorboard only.")
 
+    # create training object and fit
     trainer = Trainer(
         max_epochs=epochs, 
         accelerator="auto", 
@@ -44,6 +47,7 @@ if __name__=="__main__":
 
     data_transforms = torchvision.models.VGG19_BN_Weights.DEFAULT.transforms()
     
+    # create train dataloader
     train_dir = "data/train"
     train_dataset = datasets.ImageFolder(root=train_dir, transform=data_transforms)
     train_dataloader = DataLoader(
@@ -51,7 +55,7 @@ if __name__=="__main__":
         batch_size=64,
         shuffle=True
     )
-
+    # create val dataloader
     val_dir = "data/val"
     val_dataset = datasets.ImageFolder(root=val_dir, transform=data_transforms)
     val_dataloader = DataLoader(
@@ -59,5 +63,5 @@ if __name__=="__main__":
         batch_size=64,
         shuffle=False
     )
-
+    # simple training loop
     simple_train(model, train_dataloader, val_dataloader)
