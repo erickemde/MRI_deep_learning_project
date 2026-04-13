@@ -16,8 +16,8 @@ def simple_train(model, train_dataloader, val_dataloader, epochs=10):
     lr_callback = LearningRateMonitor(logging_interval="step")
     ckpt_callback = ModelCheckpoint(
         dirpath="checkpoints",
-        filename="sample-vgg19-{epoch}-{val_loss:.2f}",
-        monitor="val_loss",
+        filename="sample-vgg19-{epoch}-{valid/val_loss:.2f}",
+        monitor="valid/valid_loss",
         save_top_k=3,
         mode="min"
     )
