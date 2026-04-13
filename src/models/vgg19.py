@@ -9,7 +9,7 @@ BATCH_NORM = {
 
 # VGG Model Class
 class VGGModel(nn.Module):
-    def __init__(self, pretrained=True, batch_norm = True, freeze = True, self_attention=False):
+    def __init__(self, pretrained=True, batch_norm=True, freeze=True, self_attention=False):
         super().__init__()
 
         # model selection
