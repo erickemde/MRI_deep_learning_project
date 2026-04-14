@@ -22,4 +22,6 @@ dependencies:
       - wandb
       - torchmetrics
       - seaborn
+      - albumentations
+      - opencv-python
 
