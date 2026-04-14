@@ -67,3 +67,7 @@ class LitVGG(L.LightningModule):
                 "frequency": 1,
             }
         }
+    
+    @property
+    def transforms(self):
+        return self.model.transforms
