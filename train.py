@@ -8,18 +8,19 @@ from lightning.pytorch.callbacks import ModelCheckpoint, LearningRateMonitor
 from src.models.lit_vgg import LitVGG
 torch.set_float32_matmul_precision('high')
 
-def simple_train(model, train_dataloader, val_dataloader, epochs=10):
+def simple_train(model, train_dataloader, val_dataloader, epochs=10, run_name="model"):
     """
     Train Model using Pytorch Lightning Framework to simplify training code
     """
     # create callbacks
     lr_callback = LearningRateMonitor(logging_interval="step")
     ckpt_callback = ModelCheckpoint(
-        dirpath="checkpoints",
-        filename="sample-vgg19-{epoch}-{valid/val_loss:.2f}",
+        dirpath=f"checkpoints/{run_name}",
+        filename=f"{run_name}-epoch={{epoch}}-valid_loss={{valid/valid_loss:.2f}}",
         monitor="valid/valid_loss",
         save_top_k=3,
-        mode="min"
+        mode="min",
+        auto_insert_metric_name=False
     )
     callbacks = [lr_callback, ckpt_callback]
 
@@ -45,7 +46,7 @@ if __name__=="__main__":
 
     model = LitVGG()
 
-    data_transforms = torchvision.models.VGG19_BN_Weights.DEFAULT.transforms()
+    data_transforms = model.transforms
     
     # create train dataloader
     train_dir = "data/train"
@@ -64,4 +65,4 @@ if __name__=="__main__":
         shuffle=False
     )
     # simple training loop
-    simple_train(model, train_dataloader, val_dataloader)
+    simple_train(model, train_dataloader, val_dataloader, run_name="vgg19_bn")
