@@ -3,8 +3,16 @@ from torch import nn
 import torch
 
 BATCH_NORM = {
-    True: (torchvision.models.vgg19_bn, torchvision.models.VGG19_BN_Weights.DEFAULT),
-    False: (torchvision.models.vgg19, torchvision.models.VGG19_Weights.DEFAULT)
+    True: (
+        torchvision.models.vgg19_bn, 
+        torchvision.models.VGG19_BN_Weights.DEFAULT, 
+        torchvision.models.VGG19_BN_Weights.DEFAULT.transforms()
+    ),
+    False: (
+        torchvision.models.vgg19, 
+        torchvision.models.VGG19_Weights.DEFAULT,
+        torchvision.models.VGG19_Weights.DEFAULT.transforms()
+    )
 }
 
 # VGG Model Class
@@ -13,7 +21,7 @@ class VGGModel(nn.Module):
         super().__init__()
 
         # model selection
-        model, weights = BATCH_NORM[batch_norm]
+        model, weights, self.transforms = BATCH_NORM[batch_norm]
 
         # initialize vgg model
         self.vgg = model(weights=weights if pretrained else None)
