@@ -2,7 +2,7 @@
 *.csv
 *.tsv
 *.jpg
-data/
+/data/
 data_raw/
 wandb
 logs
