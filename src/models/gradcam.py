@@ -3,6 +3,7 @@ import torch.nn.functional as F
 from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
+from pathlib import Path
 
 class GradCAM:
     def __init__(self, model, target_layer):
@@ -52,9 +53,9 @@ class GradCAM:
         cam = (weights*self.activations).sum(dim=1, keepdim=True)
         cam = torch.relu(cam)
 
-        return cam
+        return cam, class_idx
     
-    def visualize(self, img_path, class_idx=None):
+    def visualize(self, img_path, class_idx=None, alpha=0.4):
         """
         Visualize gradcam heatmap on original image
         """
@@ -66,7 +67,7 @@ class GradCAM:
         img = np.array(img.resize((x.shape[3], x.shape[2])))/255.0
 
         # generate heatmap
-        cam = self.generate(x, class_idx)
+        cam, class_idx = self.generate(x, class_idx)
 
         # resize and normalize heatmap
         cam = F.interpolate(cam, size=x.shape[2:], mode="bilinear", align_corners=False)
@@ -75,7 +76,6 @@ class GradCAM:
 
         # combine original image and heatmap
         heatmap = plt.cm.jet(cam)[:,:,:3]
-        alpha = 0.4
         overlay = alpha*heatmap + (1-alpha)*img
 
         # plot original, heatmap, and overlay
@@ -86,6 +86,11 @@ class GradCAM:
         axes[1].set_title("Heatmap")
         axes[2].imshow(overlay)
         axes[2].set_title("Overlay")
+
+        parent = Path(img_path).parent.name
+        classes = ['glioma', 'meningioma', 'notumor', 'pituitary']
+        if parent in classes:
+            fig.suptitle(f"True: {parent} | Pred: {classes[class_idx]}")
 
         for ax in axes:
             ax.axis("off")
