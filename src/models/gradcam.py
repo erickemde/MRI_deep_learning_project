@@ -72,7 +72,7 @@ class GradCAM:
         # resize and normalize heatmap
         cam = F.interpolate(cam, size=x.shape[2:], mode="bilinear", align_corners=False)
         cam = cam.squeeze().detach().cpu().numpy()
-        cam = (cam-cam.min())/(cam.max()-cam.min())
+        cam = (cam-cam.min())/(cam.max()-cam.min()+1e-8) # added 1e-8 for stability
 
         # combine original image and heatmap
         heatmap = plt.cm.jet(cam)[:,:,:3]
