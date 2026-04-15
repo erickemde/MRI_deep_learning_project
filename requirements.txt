@@ -12,3 +12,5 @@ pyyaml
 lightning
 tensorboard
 wandb
+opencv-python
+albumentations
