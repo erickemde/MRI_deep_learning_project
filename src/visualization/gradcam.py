@@ -4,6 +4,10 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
+import random
+from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
+from tqdm import tqdm
+import argparse
 
 class GradCAM:
     def __init__(self, model, target_layer):
@@ -11,6 +15,7 @@ class GradCAM:
         self.target_layer = target_layer
         self.gradients = None
         self.activations = None
+        self.device = next(self.model.parameters()).device
         self._register_hooks()
 
     def _register_hooks(self):
@@ -32,26 +37,31 @@ class GradCAM:
         """
         # set model to eval and place input to same device
         self.model.eval()
-        device = next(self.model.parameters()).device
-        x = x.to(device)
+        x = x.to(self.device)
 
         # make sure parameters are unfrozen
+        current_grad = [p.requires_grad for p in self.model.parameters()]
         for param in self.model.parameters():
             param.requires_grad = True
-        logits = self.model(x)
 
-        # if no class provided, use predicted class
-        if class_idx is None:
-            class_idx=logits.argmax(dim=1)
+        try:
+            logits = self.model(x)
 
-        # backpropagation from target class
-        self.model.zero_grad()
-        logits[0, class_idx].backward()
+            # if no class provided, use predicted class
+            if class_idx is None:
+                class_idx=logits.argmax(dim=1).item()
 
-        # calculate gradcam
-        weights = self.gradients.mean(dim=[2,3], keepdim=True)
-        cam = (weights*self.activations).sum(dim=1, keepdim=True)
-        cam = torch.relu(cam)
+            # backpropagation from target class
+            self.model.zero_grad()
+            logits[0, class_idx].backward()
+
+            # calculate gradcam
+            weights = self.gradients.mean(dim=[2,3], keepdim=True)
+            cam = (weights*self.activations).sum(dim=1, keepdim=True)
+            cam = torch.relu(cam)
+        finally:
+            for param, grad_status in zip(self.model.parameters(), current_grad):
+                param.requires_grad = grad_status
 
         return cam, class_idx
     
@@ -97,3 +107,85 @@ class GradCAM:
 
         plt.tight_layout()
         return fig
+    
+    def examples(
+            self, 
+            dataloader, 
+            save_dir="examples", 
+            total_examples = 3, 
+            seed=42
+        ):
+        """
+        Summarize Key Grad Cam Results:
+        1. Generate Grad Cam Examples for each Class
+        2. Compute Confusion Matrix for Model
+        3. Generate Grad Cam Examples for misclassified examples
+        """
+
+        # set random seed and create save_dir
+        random.seed(seed)
+        Path(save_dir).mkdir(parents=True, exist_ok=True)
+        classes = ['glioma', 'meningioma', 'notumor', 'pituitary']
+
+        # gradcam examples per class
+        print("="*60)
+        print("Generating GradCAM Examples by Class")
+        print("="*60)
+        for cls in tqdm(classes):
+            cls_dir = Path("data/val")/cls
+            cls_img_paths = random.sample(list(cls_dir.glob("*.jpg")), total_examples)
+            save_path = Path(save_dir)/"gradcam"/cls
+            save_path.mkdir(parents=True, exist_ok=True)
+            for i, cls_img_path in enumerate(cls_img_paths):
+                fig = self.visualize(cls_img_path)
+                fig.savefig(save_path/f"{cls}_{i}.png")
+                plt.close(fig)
+        
+
+        # confusion matrix
+        print("="*60)
+        print("Generating Confusion Matrix")
+        print("="*60)
+        all_preds = []
+        all_labels = []
+        self.model.eval()
+        with torch.no_grad():
+            for x, y in tqdm(dataloader):
+                x = x.to(self.device)
+                preds = self.model(x).argmax(dim=1).cpu()
+                all_preds.extend(preds)
+                all_labels.extend(y)
+
+        
+        conf_matrix = confusion_matrix(all_labels, all_preds)
+        display = ConfusionMatrixDisplay(conf_matrix, display_labels=classes)
+        fig, ax = plt.subplots(figsize=(8,8))
+        display.plot(ax=ax, colorbar=False, cmap="Blues")
+        ax.set_title("Confusion Matrix")
+        plt.savefig(f"{save_dir}/confusion_matrix.png")
+        plt.close()
+
+        # misclassified examples
+        print("="*60)
+        print("Generating Misclassified Examples")
+        print("="*60)
+
+        misclassified_dir = Path(save_dir)/"misclassified"
+        misclassified_dir.mkdir(parents=True, exist_ok=True)
+
+        image_paths = list(Path("data/val").rglob("*.jpg"))
+        random.shuffle(image_paths)
+        total_wrong = 0
+        for path in image_paths:
+            if total_wrong>=total_examples:
+                break
+            true_label = path.parent.name
+            fig = self.visualize(path)
+            pred = fig.get_suptitle().split("Pred: ")[1]
+            if pred!=true_label:
+                fig.savefig(misclassified_dir/f"{true_label}_as_{pred}_{total_wrong}.png")
+                total_wrong+=1
+                print("Total Wrong:", total_wrong)
+            plt.close(fig)
+
+        print(f"Done! Results saved to {save_dir}")
