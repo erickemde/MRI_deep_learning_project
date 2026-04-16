@@ -2,8 +2,8 @@
 *.csv
 *.tsv
 *.jpg
-data/
-data_raw/
+/data/
+/data_raw/
 wandb
 logs
 checkpoints
