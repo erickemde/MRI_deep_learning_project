@@ -1,0 +1,106 @@
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+/home/gtubt-lab1/miniconda3/envs/CS7643_deep_learning_project/lib/python3.11/site-packages/pytorch_lightning/callbacks/model_checkpoint.py:881: Checkpoint directory /home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_softmax_attention_finetune exists and is not empty.
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+
+  | Name      | Type               | Params | Mode  | FLOPs
+-----------------------------------------------------------------
+0 | model     | VGG19Model         | 156 M  | train | 0    
+1 | loss_fn   | CrossEntropyLoss   | 0      | train | 0    
+2 | train_acc | MulticlassAccuracy | 0      | train | 0    
+3 | val_acc   | MulticlassAccuracy | 0      | train | 0    
+-----------------------------------------------------------------
+24.7 M    Trainable params
+131 M     Non-trainable params
+156 M     Total params
+626.106   Total estimated model params size (MB)
+77        Modules in train mode
+0         Modules in eval mode
+0         Total Flops
+/home/gtubt-lab1/miniconda3/envs/CS7643_deep_learning_project/lib/python3.11/site-packages/pytorch_lightning/utilities/_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+======================================================================
+EXPERIMENT: softmax_attention_finetune
+======================================================================
+  Model Type: softmax_attention_finetune
+  Augmentation: Disabled
+  Training Mode: Feature Extraction (Frozen Backbone)
+  Epochs: 30
+  Batch Size: 64
+  Learning Rate: 0.001
+======================================================================
+
+[1/5] Loading datasets...
+
+[TRAIN] Dataset loaded:
+  Total images: 4530
+  - glioma: 1258
+  - meningioma: 1237
+  - notumor: 820
+  - pituitary: 1215
+
+[VAL] Dataset loaded:
+  Total images: 502
+  - glioma: 139
+  - meningioma: 137
+  - notumor: 91
+  - pituitary: 135
+
+[2/5] Creating transforms...
+  No augmentation
+
+[3/5] Creating datasets...
+  Train batches: 71
+  Val batches: 8
+
+[4/5] Creating model...
+[INFO] Unfroze layers from index 35
+[INFO] Using Softmax Attention
+[INFO] Total params: 156.5M
+[INFO] Frozen params: 131.9M
+[INFO] Trainable params: 24.652M
+  Model: VGG19 + Softmax Attention (Partial Fine-tune)
+
+[5/5] Setting up trainer...
+
+======================================================================
+TRAINING STARTED
+======================================================================
+
+Epoch 0, global step 71: 'val_acc' reached 0.92430 (best 0.92430), saving model to '/home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_softmax_attention_finetune/best-epoch=00-val_acc=0.9243.ckpt' as top 1
+Epoch 1, global step 142: 'val_acc' reached 0.93426 (best 0.93426), saving model to '/home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_softmax_attention_finetune/best-epoch=01-val_acc=0.9343.ckpt' as top 1
+Epoch 2, global step 213: 'val_acc' was not in top 1
+Epoch 3, global step 284: 'val_acc' reached 0.95618 (best 0.95618), saving model to '/home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_softmax_attention_finetune/best-epoch=03-val_acc=0.9562.ckpt' as top 1
+Epoch 4, global step 355: 'val_acc' reached 0.96215 (best 0.96215), saving model to '/home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_softmax_attention_finetune/best-epoch=04-val_acc=0.9622.ckpt' as top 1
+Epoch 5, global step 426: 'val_acc' was not in top 1
+Epoch 6, global step 497: 'val_acc' was not in top 1
+Epoch 7, global step 568: 'val_acc' reached 0.96813 (best 0.96813), saving model to '/home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_softmax_attention_finetune/best-epoch=07-val_acc=0.9681.ckpt' as top 1
+Epoch 8, global step 639: 'val_acc' was not in top 1
+Epoch 9, global step 710: 'val_acc' was not in top 1
+Epoch 10, global step 781: 'val_acc' was not in top 1
+Epoch 11, global step 852: 'val_acc' was not in top 1
+Epoch 12, global step 923: 'val_acc' was not in top 1
+Epoch 13, global step 994: 'val_acc' was not in top 1
+Epoch 14, global step 1065: 'val_acc' was not in top 1
+Epoch 15, global step 1136: 'val_acc' was not in top 1
+Epoch 16, global step 1207: 'val_acc' was not in top 1
+Epoch 17, global step 1278: 'val_acc' was not in top 1
+Epoch 18, global step 1349: 'val_acc' was not in top 1
+Epoch 19, global step 1420: 'val_acc' reached 0.97012 (best 0.97012), saving model to '/home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_softmax_attention_finetune/best-epoch=19-val_acc=0.9701.ckpt' as top 1
+Epoch 20, global step 1491: 'val_acc' was not in top 1
+Epoch 21, global step 1562: 'val_acc' was not in top 1
+Epoch 22, global step 1633: 'val_acc' was not in top 1
+Epoch 23, global step 1704: 'val_acc' was not in top 1
+Epoch 24, global step 1775: 'val_acc' was not in top 1
+Epoch 25, global step 1846: 'val_acc' was not in top 1
+Epoch 26, global step 1917: 'val_acc' was not in top 1
+Epoch 27, global step 1988: 'val_acc' was not in top 1
+Epoch 28, global step 2059: 'val_acc' was not in top 1
+Epoch 29, global step 2130: 'val_acc' was not in top 1
+`Trainer.fit` stopped: `max_epochs=30` reached.
+
+======================================================================
+EXPERIMENT 'vgg19_softmax_attention_finetune' COMPLETED
+  Best Validation Accuracy: 0.9701
+  Checkpoint: /home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_softmax_attention_finetune/best-epoch=19-val_acc=0.9701.ckpt
+======================================================================
