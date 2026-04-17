@@ -13,3 +13,5 @@ lightning
 tensorboard
 wandb
 scikit-learn
+opencv-python
+albumentations
