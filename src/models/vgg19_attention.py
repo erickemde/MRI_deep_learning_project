@@ -4,121 +4,116 @@ import torch.nn.functional as F
 from torchvision.models import vgg19_bn, VGG19_BN_Weights
 
 
-class CustomChannelAttention(nn.Module):
-
+class SoftmaxAttention(nn.Module):
     def __init__(self, num_channels):
         super().__init__()
-        # Learnable weights w in R^C
-        self.weights = nn.Parameter(torch.randn(num_channels))
-        
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.channel_weights = nn.Parameter(torch.randn(num_channels))
+    
     def forward(self, x):
-
         B, C, H, W = x.size()
         
-        # Step 1: Global Average Pooling (Equation 1)
-        v = F.adaptive_avg_pool2d(x, (1, 1)).view(B, C)
+        v = self.avg_pool(x).view(B, C)
+        alpha = F.softmax(self.channel_weights, dim=0)
+        alpha = alpha.unsqueeze(0).expand(B, -1)
         
-        # Step 2: SoftMax-weighted attention (Equation 2)
-        alpha = F.softmax(self.weights, dim=0)  # (C,)
+        out = x * alpha.view(B, C, 1, 1)
+        return out
+
+
+class SEAttention(nn.Module):
+    def __init__(self, num_channels, reduction_ratio=16):
+        super().__init__()
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
         
-        # Step 3: Element-wise multiplication
-        v_att = v * alpha  # Broadcasting: (B, C) * (C,)
-        
-        return v_att
+        self.fc = nn.Sequential(
+            nn.Linear(num_channels, num_channels // reduction_ratio, bias=False),
+            nn.ReLU(inplace=True),
+            nn.Linear(num_channels // reduction_ratio, num_channels, bias=False),
+            nn.Sigmoid()
+        )
+    
+    def forward(self, x):
+        B, C, H, W = x.size()
+        y = self.avg_pool(x).view(B, C)
+        y = self.fc(y).view(B, C, 1, 1)
+        return x * y
 
 
 class VGG19Model(nn.Module):
-
     def __init__(
-        self, 
-        pretrained=True, 
-        freeze=True, 
-        use_attention=True,
-        num_classes=4
+        self,
+        attention_type=None,
+        num_classes=4,
+        pretrained=True,
+        reduction_ratio=16,
+        unfreeze_from_layer=None
     ):
         super().__init__()
         
-        self.use_attention = use_attention
+        self.vgg = vgg19_bn(weights=VGG19_BN_Weights.IMAGENET1K_V1 if pretrained else None)
         
-        # Load VGG19 with Batch Normalization
-        weights = VGG19_BN_Weights.IMAGENET1K_V1 if pretrained else None
-        vgg = vgg19_bn(weights=weights)
+        for param in self.vgg.parameters():
+            param.requires_grad = False
         
-        # Extract feature layers (conv + bn + relu layers)
-        self.features = vgg.features  # Output: (B, 512, 7, 7) for 224x224 input
+        if unfreeze_from_layer is not None:
+            for i, layer in enumerate(self.vgg.features):
+                if i >= unfreeze_from_layer:
+                    for param in layer.parameters():
+                        param.requires_grad = True
+            print(f"[INFO] Unfroze layers from index {unfreeze_from_layer}")
         
-        # Freeze backbone if requested
-        if freeze:
-            for param in self.features.parameters():
-                param.requires_grad = False
-        
-        # Add attention mechanism
-        if use_attention:
-            # Custom Channel Attention
-            self.attention = CustomChannelAttention(num_channels=512)
-            # Compact classifier
-            self.classifier = nn.Sequential(
-                nn.Dropout(0.5),
-                nn.Linear(512, 256),
-                nn.ReLU(inplace=True),
-                nn.Dropout(0.5),
-                nn.Linear(256, num_classes)
-            )
-        else:
-            # Baseline: No attention
-            self.attention = None
+        if attention_type == 'softmax':
+            self.use_attention = True
+            self.features = self.vgg.features
+            self.attention = SoftmaxAttention(512)
+            
             self.classifier = nn.Sequential(
                 nn.AdaptiveAvgPool2d((7, 7)),
                 nn.Flatten(),
-                nn.Linear(512 * 7 * 7, 4096),
+                nn.Linear(512 * 7 * 7, 512),
                 nn.ReLU(True),
                 nn.Dropout(0.5),
-                nn.Linear(4096, 1024),
-                nn.ReLU(True),
-                nn.Dropout(0.5),
-                nn.Linear(1024, num_classes)
+                nn.Linear(512, num_classes)
             )
+            print("[INFO] Using Softmax Attention")
+            
+        elif attention_type == 'se':
+            self.use_attention = True
+            self.features = self.vgg.features
+            self.attention = SEAttention(512, reduction_ratio=reduction_ratio)
+            
+            self.classifier = nn.Sequential(
+                nn.AdaptiveAvgPool2d((7, 7)),
+                nn.Flatten(),
+                nn.Linear(512 * 7 * 7, 512),
+                nn.ReLU(True),
+                nn.Dropout(0.5),
+                nn.Linear(512, num_classes)
+            )
+            print("[INFO] Using SE Attention")
+            
+        elif attention_type is None:
+            self.use_attention = False
+            final_in_features = self.vgg.classifier[-1].in_features
+            self.vgg.classifier[-1] = nn.Linear(final_in_features, num_classes)
+            print("[INFO] No attention (Baseline)")
+        else:
+            raise ValueError(f"Invalid attention_type: {attention_type}")
+        
+        total_params = sum(p.numel() for p in self.parameters())
+        trainable_params = sum(p.numel() for p in self.parameters() if p.requires_grad)
+        frozen_params = total_params - trainable_params
+        
+        print(f"[INFO] Total params: {total_params/1e6:.1f}M")
+        print(f"[INFO] Frozen params: {frozen_params/1e6:.1f}M")
+        print(f"[INFO] Trainable params: {trainable_params/1e6:.3f}M")
     
     def forward(self, x):
-
-        # Feature extraction
-        features = self.features(x)  # (B, 512, 7, 7)
-        
-        # Apply attention if enabled
         if self.use_attention:
-            # Custom Attention: (B, 512, 7, 7) -> (B, 512)
-            v_att = self.attention(features)
-            output = self.classifier(v_att)
+            x = self.features(x)
+            x = self.attention(x)
+            x = self.classifier(x)
         else:
-            # Baseline: Direct classification
-            output = self.classifier(features)
-        
-        return output
-    
-    def get_attention_weights(self):
-
-        if self.use_attention:
-            # Return SoftMax-normalized weights
-            return F.softmax(self.attention.weights, dim=0).detach()
-        else:
-            return None
-
-
-if __name__ == "__main__":
-    # Test the model
-    batch_size = 4
-    x = torch.randn(batch_size, 3, 224, 224)
-    
-    # Test with attention
-    model_with_attn = VGG19Model(use_attention=True)
-    output = model_with_attn(x)
-    print(f"VGG19 + Custom Attention - Output: {output.shape}")
-    
-    weights = model_with_attn.get_attention_weights()
-    if weights is not None:
-        print(f"Attention weights: {weights.shape}")
-    
-    # Test baseline (no attention)
-    model_baseline = VGG19Model(use_attention=False)
-    output = model_baseline(x)
-    print(f"VGG19 Baseline - Output: {output.shape}")
+            x = self.vgg(x)
+        return x
