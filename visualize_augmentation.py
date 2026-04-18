@@ -1,165 +1,173 @@
-"""
-Augmentation Visualization 
-
-"""
-
+import torch
 import matplotlib.pyplot as plt
+from pathlib import Path
+from PIL import Image
+from torchvision.transforms import v2
 import numpy as np
-from src.data.dataset import BrainTumorDataset
-from src.data.augmentation import (
-    get_train_augmentation, 
-    get_val_augmentation,
-    get_light_augmentation
-)
+
+from src.data.dataset import load_dataset_from_directory
 
 
-def denormalize_image(tensor_image):
-
-    img = tensor_image.permute(1, 2, 0).numpy()
-    img = img * np.array([0.229, 0.224, 0.225]) + np.array([0.485, 0.456, 0.406])
-    img = np.clip(img, 0, 1)
-    return img
+def denormalize(tensor, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
+    mean = torch.tensor(mean).view(3, 1, 1)
+    std = torch.tensor(std).view(3, 1, 1)
+    return tensor * std + mean
 
 
-def visualize_augmentation_comparison():
+def get_augmentation_variants():
     
-    print("\n" + "="*70)
-    print("AUGMENTATION VISUALIZATION")
-    print("="*70 + "\n")
+    no_aug = v2.Compose([
+        v2.Resize((224, 224), antialias=True),
+        v2.ToImage(),
+        v2.ToDtype(torch.float32, scale=True),
+        v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
     
-    # Load datasets
-    train_transform = get_train_augmentation()
-    val_transform = get_val_augmentation()
+    light_aug = v2.Compose([
+        v2.Resize((224, 224), antialias=True),
+        v2.ToImage(),
+        v2.ToDtype(torch.float32, scale=True),
+        v2.RandomHorizontalFlip(p=0.5),
+        v2.RandomRotation(degrees=5, interpolation=v2.InterpolationMode.BILINEAR),
+        v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
     
-    aug_dataset = BrainTumorDataset('data/train', transform=train_transform)
-    orig_dataset = BrainTumorDataset('data/train', transform=val_transform)
+    full_aug = v2.Compose([
+        v2.Resize((224, 224), antialias=True),
+        v2.ToImage(),
+        v2.ToDtype(torch.float32, scale=True),
+        v2.RandomHorizontalFlip(p=0.5),
+        v2.RandomRotation(degrees=15, interpolation=v2.InterpolationMode.BILINEAR),
+        v2.ElasticTransform(alpha=50.0, sigma=5.0, interpolation=v2.InterpolationMode.BILINEAR, fill=0),
+        v2.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1, hue=0.05),
+        v2.GaussianNoise(mean=0.0, sigma=0.1, clip=True),
+        v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
     
-    # Configuration
-    num_samples = 5
-    num_augmentations = 5
-    
-    # Create figure
-    fig, axes = plt.subplots(
-        num_samples, 
-        num_augmentations + 1, 
-        figsize=(18, num_samples * 3)
-    )
-    
-    print("Generating augmentation examples...\n")
-    
-    for sample_idx in range(num_samples):
-        # Original image
-        orig_img, label = orig_dataset[sample_idx]
-        axes[sample_idx, 0].imshow(denormalize_image(orig_img))
-        axes[sample_idx, 0].set_title(
-            f'Original\n(Class: {orig_dataset.classes[label]})', 
-            fontsize=11,
-            fontweight='bold'
-        )
-        axes[sample_idx, 0].axis('off')
-        
-        # Augmented versions
-        for aug_idx in range(num_augmentations):
-            aug_img, _ = aug_dataset[sample_idx]
-            axes[sample_idx, aug_idx + 1].imshow(denormalize_image(aug_img))
-            axes[sample_idx, aug_idx + 1].set_title(
-                f'Augmented #{aug_idx + 1}', 
-                fontsize=11
-            )
-            axes[sample_idx, aug_idx + 1].axis('off')
-        
-        print(f"   Sample {sample_idx + 1}/{num_samples} completed")
-    
-    # Finalize plot
-    plt.suptitle(
-        'Data Augmentation Examples: Original vs Augmented', 
-        fontsize=16, 
-        y=0.995,
-        fontweight='bold'
-    )
-    plt.tight_layout()
-    
-    # Save
-    output_path = 'augmentation_examples.png'
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    
-    print(f"\n{'='*70}")
-    print(f"SAVED: {output_path}")
-    print(f"{'='*70}\n")
-    
-    plt.close()
-
-
-def compare_augmentation_strengths():
-    
-    print("\n" + "="*70)
-    print("AUGMENTATION STRENGTH COMPARISON")
-    print("="*70 + "\n")
-    
-    transforms = {
-        'No Aug': get_val_augmentation(),
-        'Light Aug': get_light_augmentation(),
-        'Full Aug': get_train_augmentation()
+    return {
+        'No Aug': no_aug,
+        'Light Aug': light_aug,
+        'Full Aug': full_aug
     }
+
+
+def visualize_augmentation_examples(data_dir='data', num_samples=5, save_path='augmentation_examples.png'):
     
-    datasets = {
-        name: BrainTumorDataset('data/train', transform=transform)
-        for name, transform in transforms.items()
-    }
+    train_paths, train_labels = load_dataset_from_directory(data_dir, split='train')
     
-    # Create figure
-    fig, axes = plt.subplots(3, 4, figsize=(16, 12))
+    classes = ['glioma', 'meningioma', 'notumor', 'pituitary']
     
-    sample_idx = 0
+    selected_images = []
+    for class_idx in range(4):
+        indices = [i for i, label in enumerate(train_labels) if label == class_idx]
+        if indices:
+            selected_images.append((train_paths[indices[0]], class_idx))
     
-    for col_idx, (name, dataset) in enumerate(datasets.items()):
-        for row_idx in range(3):
-            img, label = dataset[sample_idx]
-            axes[row_idx, col_idx].imshow(denormalize_image(img))
+    if len(train_labels) > 0:
+        selected_images.append((train_paths[0], train_labels[0]))
+    
+    aug_transform = v2.Compose([
+        v2.Resize((224, 224), antialias=True),
+        v2.ToImage(),
+        v2.ToDtype(torch.float32, scale=True),
+        v2.RandomHorizontalFlip(p=0.5),
+        v2.RandomRotation(degrees=15, interpolation=v2.InterpolationMode.BILINEAR),
+        v2.ElasticTransform(alpha=50.0, sigma=5.0, interpolation=v2.InterpolationMode.BILINEAR, fill=0),
+        v2.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1, hue=0.05),
+        v2.GaussianNoise(mean=0.0, sigma=0.1, clip=True),
+        v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+    
+    no_aug_transform = v2.Compose([
+        v2.Resize((224, 224), antialias=True),
+        v2.ToImage(),
+        v2.ToDtype(torch.float32, scale=True),
+        v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+    
+    fig, axes = plt.subplots(len(selected_images), num_samples + 1, figsize=(18, 3 * len(selected_images)))
+    fig.suptitle('Data Augmentation Examples: Original vs Augmented', fontsize=16, fontweight='bold')
+    
+    for row, (img_path, class_idx) in enumerate(selected_images):
+        img = Image.open(img_path).convert('RGB')
+        
+        orig_tensor = no_aug_transform(img)
+        orig_img = denormalize(orig_tensor).permute(1, 2, 0).numpy()
+        orig_img = np.clip(orig_img, 0, 1)
+        
+        axes[row, 0].imshow(orig_img, cmap='gray')
+        axes[row, 0].set_title(f'Original\n(Class: {classes[class_idx]})', fontsize=10)
+        axes[row, 0].axis('off')
+        
+        for col in range(1, num_samples + 1):
+            aug_tensor = aug_transform(img)
+            aug_img = denormalize(aug_tensor).permute(1, 2, 0).numpy()
+            aug_img = np.clip(aug_img, 0, 1)
             
-            if row_idx == 0:
-                axes[row_idx, col_idx].set_title(
-                    name, 
-                    fontsize=13,
-                    fontweight='bold'
-                )
-            axes[row_idx, col_idx].axis('off')
+            axes[row, col].imshow(aug_img, cmap='gray')
+            axes[row, col].set_title(f'Augmented #{col}', fontsize=10)
+            axes[row, col].axis('off')
     
-    # Original image in last column
-    orig_dataset = BrainTumorDataset('data/train', transform=get_val_augmentation())
-    for row_idx in range(3):
-        orig_img, label = orig_dataset[sample_idx]
-        axes[row_idx, 3].imshow(denormalize_image(orig_img))
-        if row_idx == 0:
-            axes[row_idx, 3].set_title(
-                'Original', 
-                fontsize=13,
-                fontweight='bold'
-            )
-        axes[row_idx, 3].axis('off')
-    
-    plt.suptitle(
-        'Augmentation Strength Comparison', 
-        fontsize=16,
-        fontweight='bold'
-    )
     plt.tight_layout()
-    
-    output_path = 'augmentation_strength_comparison.png'
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    
-    print(f"{'='*70}")
-    print(f"SAVED: {output_path}")
-    print(f"{'='*70}\n")
-    
+    plt.savefig(save_path, dpi=150, bbox_inches='tight')
+    print(f"Saved: {save_path}")
     plt.close()
 
 
-if __name__ == "__main__":
-    # Visualize augmentation examples
-    visualize_augmentation_comparison()
+def visualize_augmentation_strength(data_dir='data', save_path='augmentation_strength_comparison.png'):
     
-    # Compare augmentation strengths
-    compare_augmentation_strengths()
+    train_paths, train_labels = load_dataset_from_directory(data_dir, split='train')
     
-    print("\nVisualization complete! Check the generated PNG files.\n")
+    import random
+    random.seed(42)
+    indices = random.sample(range(len(train_paths)), 3)
+    
+    variants = get_augmentation_variants()
+    
+    fig, axes = plt.subplots(3, 4, figsize=(16, 12))
+    fig.suptitle('Augmentation Strength Comparison', fontsize=16, fontweight='bold')
+    
+    titles = ['No Aug', 'Light Aug', 'Full Aug', 'Original']
+    for col, title in enumerate(titles):
+        axes[0, col].set_title(title, fontsize=14, fontweight='bold', pad=10)
+    
+    for row, idx in enumerate(indices):
+        img_path = train_paths[idx]
+        img = Image.open(img_path).convert('RGB')
+        
+        orig_transform = v2.Compose([
+            v2.Resize((224, 224), antialias=True),
+            v2.ToImage(),
+            v2.ToDtype(torch.float32, scale=True)
+        ])
+        orig_tensor = orig_transform(img)
+        orig_img = orig_tensor.permute(1, 2, 0).numpy()
+        
+        for col, (name, transform) in enumerate(variants.items()):
+            aug_tensor = transform(img)
+            aug_img = denormalize(aug_tensor).permute(1, 2, 0).numpy()
+            aug_img = np.clip(aug_img, 0, 1)
+            
+            axes[row, col].imshow(aug_img, cmap='gray')
+            axes[row, col].axis('off')
+        
+        axes[row, 3].imshow(orig_img, cmap='gray')
+        axes[row, 3].axis('off')
+    
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=150, bbox_inches='tight')
+    print(f"Saved: {save_path}")
+    plt.close()
+
+
+if __name__ == '__main__':
+    visualize_augmentation_examples(
+        data_dir='data',
+        num_samples=5,
+        save_path='augmentation_examples.png'
+    )
+    
+    visualize_augmentation_strength(
+        data_dir='data',
+        save_path='augmentation_strength_comparison.png'
+    )

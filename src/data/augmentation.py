@@ -1,117 +1,58 @@
-"""
-Data Augmentation for Brain Tumor MRI Images
+# src/data/augmentation.py
 
-"""
-
-import albumentations as A
-from albumentations.pytorch import ToTensorV2
+import torch
+from torchvision.transforms import v2
 
 
-def get_train_augmentation():
+def get_train_transforms(use_augmentation=True):
+    if use_augmentation:
+        return v2.Compose([
+            v2.Resize((224, 224), antialias=True),
+            v2.ToImage(),
+            v2.ToDtype(torch.float32, scale=True),
+            
+            v2.RandomHorizontalFlip(p=0.5),
+            v2.RandomRotation(
+                degrees=10,  # 15 → 10
+                interpolation=v2.InterpolationMode.BILINEAR
+            ),
+            
+            v2.RandomAffine(
+                degrees=0,
+                translate=(0.05, 0.05),
+                scale=(0.95, 1.05),
+                interpolation=v2.InterpolationMode.BILINEAR
+            ),
+            
+            v2.ColorJitter(
+                brightness=0.1,  # 0.2 → 0.1
+                contrast=0.1     # 0.2 → 0.1
+            ),
+            
+            v2.Normalize(
+                mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225]
+            )
+        ])
+    else:
+        return v2.Compose([
+            v2.Resize((224, 224), antialias=True),
+            v2.ToImage(),
+            v2.ToDtype(torch.float32, scale=True),
+            v2.Normalize(
+                mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225]
+            )
+        ])
 
-    return A.Compose([
-        # Resize to VGG input size
-        A.Resize(224, 224),
-        
-        # Geometric transformations
-        A.HorizontalFlip(p=0.5),
-        
-        A.Rotate(
-            limit=15,       
-            p=0.5
-        ),
-        
-        A.Affine(
-            scale=(0.9, 1.1),           
-            translate_percent={
-                'x': (-0.1, 0.1),       
-                'y': (-0.1, 0.1)      
-            },
-            p=0.5
-        ),
-        
-        # Intensity transformations (mild for MRI)
-        A.RandomBrightnessContrast(
-            brightness_limit=0.1,      
-            contrast_limit=0.1,       
-            p=0.3
-        ),
-        
-        A.RandomGamma(
-            gamma_limit=(90, 110),    
-            p=0.3
-        ),
-        
-        # Noise simulation 
-        A.GaussNoise(
-            var_limit=(1, 10),          
-            mean=0,                   
-            per_channel=False,         
-            p=0.2                       
-        ),
-        
-        # Elastic deformation
 
-        A.ElasticTransform(
-            alpha=30,                  
-            sigma=5,                 
-            p=0.1                    
-        ),
-        
-        # Convert grayscale to RGB (VGG requires 3 channels)
-        A.ToRGB(),
-        
-        # Normalize using ImageNet statistics
-        A.Normalize(
+def get_val_transforms():
+    return v2.Compose([
+        v2.Resize((224, 224), antialias=True),
+        v2.ToImage(),
+        v2.ToDtype(torch.float32, scale=True),
+        v2.Normalize(
             mean=[0.485, 0.456, 0.406],
             std=[0.229, 0.224, 0.225]
-        ),
-        
-        # Convert to PyTorch tensor
-        ToTensorV2(),
-    ])
-
-
-def get_val_augmentation():
-
-    return A.Compose([
-        A.Resize(224, 224),
-        A.ToRGB(),
-        A.Normalize(
-            mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225]
-        ),
-        ToTensorV2(),
-    ])
-
-
-def get_light_augmentation():
-
-    return A.Compose([
-        A.Resize(224, 224),
-        
-        # Only basic geometric transforms
-        A.HorizontalFlip(p=0.5),
-        
-        A.Rotate(
-            limit=10,        
-            p=0.3
-        ),
-        
-        # Minimal intensity adjustment
-        A.RandomBrightnessContrast(
-            brightness_limit=0.05,      
-            contrast_limit=0.05,
-            p=0.2
-        ),
-        
-        # NO noise in light version
-        # NO elastic deformation in light version
-        
-        A.ToRGB(),
-        A.Normalize(
-            mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225]
-        ),
-        ToTensorV2(),
+        )
     ])

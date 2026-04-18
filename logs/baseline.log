@@ -1,0 +1,105 @@
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+/home/gtubt-lab1/miniconda3/envs/CS7643_deep_learning_project/lib/python3.11/site-packages/pytorch_lightning/callbacks/model_checkpoint.py:881: Checkpoint directory /home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_baseline exists and is not empty.
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+
+  | Name      | Type               | Params | Mode  | FLOPs
+-----------------------------------------------------------------
+0 | model     | VGG19Model         | 139 M  | train | 0    
+1 | loss_fn   | CrossEntropyLoss   | 0      | train | 0    
+2 | train_acc | MulticlassAccuracy | 0      | train | 0    
+3 | val_acc   | MulticlassAccuracy | 0      | train | 0    
+-----------------------------------------------------------------
+16.4 K    Trainable params
+139 M     Non-trainable params
+139 M     Total params
+558.391   Total estimated model params size (MB)
+68        Modules in train mode
+0         Modules in eval mode
+0         Total Flops
+/home/gtubt-lab1/miniconda3/envs/CS7643_deep_learning_project/lib/python3.11/site-packages/pytorch_lightning/utilities/_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+======================================================================
+EXPERIMENT: baseline
+======================================================================
+  Model Type: baseline
+  Augmentation: Disabled
+  Training Mode: Feature Extraction (Frozen Backbone)
+  Epochs: 30
+  Batch Size: 64
+  Learning Rate: 0.001
+======================================================================
+
+[1/5] Loading datasets...
+
+[TRAIN] Dataset loaded:
+  Total images: 4530
+  - glioma: 1258
+  - meningioma: 1237
+  - notumor: 820
+  - pituitary: 1215
+
+[VAL] Dataset loaded:
+  Total images: 502
+  - glioma: 139
+  - meningioma: 137
+  - notumor: 91
+  - pituitary: 135
+
+[2/5] Creating transforms...
+  No augmentation
+
+[3/5] Creating datasets...
+  Train batches: 71
+  Val batches: 8
+
+[4/5] Creating model...
+[INFO] No attention (Baseline)
+[INFO] Total params: 139.6M
+[INFO] Frozen params: 139.6M
+[INFO] Trainable params: 0.016M
+  Model: VGG19 Baseline
+
+[5/5] Setting up trainer...
+
+======================================================================
+TRAINING STARTED
+======================================================================
+
+Epoch 0, global step 71: 'val_acc' reached 0.85060 (best 0.85060), saving model to '/home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_baseline/best-epoch=00-val_acc=0.8506.ckpt' as top 1
+Epoch 1, global step 142: 'val_acc' reached 0.85857 (best 0.85857), saving model to '/home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_baseline/best-epoch=01-val_acc=0.8586.ckpt' as top 1
+Epoch 2, global step 213: 'val_acc' reached 0.86255 (best 0.86255), saving model to '/home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_baseline/best-epoch=02-val_acc=0.8625.ckpt' as top 1
+Epoch 3, global step 284: 'val_acc' was not in top 1
+Epoch 4, global step 355: 'val_acc' reached 0.86653 (best 0.86653), saving model to '/home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_baseline/best-epoch=04-val_acc=0.8665.ckpt' as top 1
+Epoch 5, global step 426: 'val_acc' was not in top 1
+Epoch 6, global step 497: 'val_acc' reached 0.88247 (best 0.88247), saving model to '/home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_baseline/best-epoch=06-val_acc=0.8825.ckpt' as top 1
+Epoch 7, global step 568: 'val_acc' was not in top 1
+Epoch 8, global step 639: 'val_acc' was not in top 1
+Epoch 9, global step 710: 'val_acc' was not in top 1
+Epoch 10, global step 781: 'val_acc' was not in top 1
+Epoch 11, global step 852: 'val_acc' was not in top 1
+Epoch 12, global step 923: 'val_acc' was not in top 1
+Epoch 13, global step 994: 'val_acc' was not in top 1
+Epoch 14, global step 1065: 'val_acc' was not in top 1
+Epoch 15, global step 1136: 'val_acc' reached 0.88446 (best 0.88446), saving model to '/home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_baseline/best-epoch=15-val_acc=0.8845.ckpt' as top 1
+Epoch 16, global step 1207: 'val_acc' reached 0.88845 (best 0.88845), saving model to '/home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_baseline/best-epoch=16-val_acc=0.8884.ckpt' as top 1
+Epoch 17, global step 1278: 'val_acc' was not in top 1
+Epoch 18, global step 1349: 'val_acc' was not in top 1
+Epoch 19, global step 1420: 'val_acc' was not in top 1
+Epoch 20, global step 1491: 'val_acc' was not in top 1
+Epoch 21, global step 1562: 'val_acc' was not in top 1
+Epoch 22, global step 1633: 'val_acc' reached 0.89044 (best 0.89044), saving model to '/home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_baseline/best-epoch=22-val_acc=0.8904.ckpt' as top 1
+Epoch 23, global step 1704: 'val_acc' was not in top 1
+Epoch 24, global step 1775: 'val_acc' was not in top 1
+Epoch 25, global step 1846: 'val_acc' reached 0.89243 (best 0.89243), saving model to '/home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_baseline/best-epoch=25-val_acc=0.8924.ckpt' as top 1
+Epoch 26, global step 1917: 'val_acc' was not in top 1
+Epoch 27, global step 1988: 'val_acc' was not in top 1
+Epoch 28, global step 2059: 'val_acc' reached 0.89442 (best 0.89442), saving model to '/home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_baseline/best-epoch=28-val_acc=0.8944.ckpt' as top 1
+Epoch 29, global step 2130: 'val_acc' reached 0.89641 (best 0.89641), saving model to '/home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_baseline/best-epoch=29-val_acc=0.8964.ckpt' as top 1
+`Trainer.fit` stopped: `max_epochs=30` reached.
+
+======================================================================
+EXPERIMENT 'vgg19_baseline' COMPLETED
+  Best Validation Accuracy: 0.8964
+  Checkpoint: /home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_baseline/best-epoch=29-val_acc=0.8964.ckpt
+======================================================================
