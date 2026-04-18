@@ -1,12 +1,12 @@
 import lightning as L
-from .vgg19 import VGGModel
+from .vgg19 import VGG19Model
 from torch import optim
 from torch import nn
 from torchmetrics import Accuracy
 
 class LitVGG(L.LightningModule):
     def __init__(self, 
-                 model = VGGModel(), 
+                 model = VGG19Model(), 
                  optimizer = optim.Adam, 
                  scheduler = optim.lr_scheduler.OneCycleLR, 
                  lr=1e-3):

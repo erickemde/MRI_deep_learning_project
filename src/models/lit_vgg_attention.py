@@ -24,6 +24,11 @@ class VGG19Baseline(pl.LightningModule):
     def forward(self, x):
         return self.model(x)
     
+    @property
+    def gradcam_target_layer(self):
+        """Returns the target layer for GradCAM visualization"""
+        return self.model.vgg.features[-4]
+    
     def training_step(self, batch, batch_idx):
         x, y = batch
         logits = self(x)
@@ -87,6 +92,11 @@ class VGG19SEAttention(pl.LightningModule):
     def forward(self, x):
         return self.model(x)
     
+    @property
+    def gradcam_target_layer(self):
+        """Returns the target layer for GradCAM visualization"""
+        return self.model.features[-4]
+    
     def training_step(self, batch, batch_idx):
         x, y = batch
         logits = self(x)
@@ -149,6 +159,11 @@ class VGG19SoftmaxAttention(pl.LightningModule):
     
     def forward(self, x):
         return self.model(x)
+    
+    @property
+    def gradcam_target_layer(self):
+        """Returns the target layer for GradCAM visualization"""
+        return self.model.features[-4]
     
     def training_step(self, batch, batch_idx):
         x, y = batch

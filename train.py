@@ -6,6 +6,7 @@ from lightning.pytorch import Trainer
 from lightning.pytorch.loggers import TensorBoardLogger, WandbLogger
 from lightning.pytorch.callbacks import ModelCheckpoint, LearningRateMonitor
 from src.models.lit_vgg import LitVGG
+from src.data.augmentation import get_train_transforms, get_val_transforms
 torch.set_float32_matmul_precision('high')
 
 def simple_train(model, train_dataloader, val_dataloader, epochs=10, run_name="model"):
@@ -46,7 +47,7 @@ if __name__=="__main__":
 
     model = LitVGG()
 
-    data_transforms = model.transforms
+    data_transforms = get_val_transforms()
     
     # create train dataloader
     train_dir = "data/train"

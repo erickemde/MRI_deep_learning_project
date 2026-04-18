@@ -9,6 +9,8 @@ from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
 from tqdm import tqdm
 import argparse
 
+from src.data.augmentation import get_val_transforms
+
 class GradCAM:
     def __init__(self, model, target_layer):
         self.model = model
@@ -72,8 +74,9 @@ class GradCAM:
 
         # read image path
         img = Image.open(img_path).convert("RGB")
-        # convert to tensor and apply model transformations
-        x = self.model.transforms(img).unsqueeze(0)
+        # convert to tensor and apply transforms
+        transforms = get_val_transforms()
+        x = transforms(img).unsqueeze(0)
         img = np.array(img.resize((x.shape[3], x.shape[2])))/255.0
 
         # generate heatmap
