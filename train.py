@@ -17,11 +17,10 @@ def simple_train(model, train_dataloader, val_dataloader, epochs=10, run_name="m
     lr_callback = LearningRateMonitor(logging_interval="step")
     ckpt_callback = ModelCheckpoint(
         dirpath=f"checkpoints/{run_name}",
-        filename=f"{run_name}-epoch={{epoch}}-valid_loss={{valid/valid_loss:.2f}}",
-        monitor="valid/valid_loss",
+        filename='best-{epoch:02d}-{val_acc:.4f}',
+        monitor="val_loss",
         save_top_k=3,
         mode="min",
-        auto_insert_metric_name=False
     )
     callbacks = [lr_callback, ckpt_callback]
 
@@ -66,4 +65,4 @@ if __name__=="__main__":
         shuffle=False
     )
     # simple training loop
-    simple_train(model, train_dataloader, val_dataloader, run_name="vgg19_bn")
+    simple_train(model, train_dataloader, val_dataloader, run_name="vgg19_bn", epochs=30)
