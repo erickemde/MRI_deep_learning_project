@@ -7,7 +7,8 @@ from torch.utils.data import DataLoader
 
 from src.data.dataset import BrainTumorDataset, load_dataset_from_directory
 from src.data.augmentation import get_train_transforms, get_val_transforms
-from src.models.lit_vgg_attention import VGG19Baseline, VGG19SEAttention, VGG19SoftmaxAttention
+from src.models.lit_vgg_attention import VGGLightningWrapper, VGG19Baseline, VGG19SEAttention, VGG19SoftmaxAttention
+from src.models.lit_vgg import LitVGG
 from src.visualization.gradcam import GradCAM
 from lightning.pytorch.loggers import TensorBoardLogger, WandbLogger
 from lightning.pytorch.callbacks import ModelCheckpoint, LearningRateMonitor
@@ -146,16 +147,12 @@ def main():
     
     if model_type == 'baseline':
         model = VGG19Baseline(
-            num_classes=4,
-            lr=args.lr,
             pretrained=True
         )
         print("  Model: VGG19 Baseline")
         
     elif model_type == 'softmax_attention':
         model = VGG19SoftmaxAttention(
-            num_classes=4,
-            lr=args.lr,
             pretrained=True,
             unfreeze_from_layer=None
         )
@@ -163,8 +160,6 @@ def main():
         
     elif model_type == 'softmax_attention_finetune':
         model = VGG19SoftmaxAttention(
-            num_classes=4,
-            lr=args.lr,
             pretrained=True,
             unfreeze_from_layer=35
         )
@@ -172,13 +167,15 @@ def main():
         
     elif model_type == 'se_attention':
         model = VGG19SEAttention(
-            num_classes=4,
             reduction=16,
-            lr=args.lr,
             pretrained=True
         )
         print("  Model: VGG19 + SE Attention")
+    else:
+        raise ValueError("Model is not defined")
     
+    model = VGGLightningWrapper(model, lr=args.lr)
+
     print("\n[5/5] Setting up trainer...")
     
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
@@ -227,7 +224,8 @@ def main():
     print("=" * 70)
     
     try:
-        gradcam_save_dir = os.path.join("examples", experiment_name)
+        gradcam_save_dir = os.path.join("gradcam_examples", experiment_name)
+        model = model.to("cuda" if torch.cuda.is_available() else "cpu")
         gradcam = GradCAM(model, model.gradcam_target_layer)
         gradcam.examples(
             dataloader=val_loader,
