@@ -5,7 +5,7 @@
 /data/
 /data_raw/
 wandb
-/examples/
+/gradcam_examples/
 logs/*/
 
 # Large model files
