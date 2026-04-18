@@ -30,8 +30,8 @@ class LitVGG(L.LightningModule):
         self.train_acc(preds, y)
         
         # logging
-        self.log("train/train_loss", loss)
-        self.log("train/train_acc", self.train_acc, on_step=False, on_epoch=True)
+        self.log("train_loss", loss, on_step=False, on_epoch=True)
+        self.log("train_acc", self.train_acc, on_step=False, on_epoch=True)
         
         return loss
     
@@ -45,8 +45,8 @@ class LitVGG(L.LightningModule):
         self.val_acc(preds, y)
 
         # logging
-        self.log("valid/valid_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("valid/valid_acc", self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val_acc", self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
 
         return loss
     
@@ -69,5 +69,5 @@ class LitVGG(L.LightningModule):
         }
     
     @property
-    def transforms(self):
-        return self.model.transforms
+    def gradcam_target_layer(self):
+        return self.model.gradcam_target_layer
