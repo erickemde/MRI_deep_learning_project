@@ -30,8 +30,12 @@ class GradCAM:
         def backward_hook(module, grad_in, grad_out):
             self.gradients = grad_out[0]
 
-        self.target_layer.register_forward_hook(forward_hook)
-        self.target_layer.register_full_backward_hook(backward_hook)
+        self.forward_handle = self.target_layer.register_forward_hook(forward_hook)
+        self.backward_handle = self.target_layer.register_full_backward_hook(backward_hook)
+
+    def _remove_hooks(self):
+        self.forward_handle.remove()
+        self.backward_handle.remove()
 
     def generate(self, x, class_idx=None):
         """
@@ -114,7 +118,7 @@ class GradCAM:
     def examples(
             self, 
             dataloader, 
-            save_dir="examples", 
+            save_dir="gradcam", 
             total_examples = 3, 
             seed=42
         ):
@@ -131,10 +135,8 @@ class GradCAM:
         classes = ['glioma', 'meningioma', 'notumor', 'pituitary']
 
         # gradcam examples per class
-        print("="*60)
-        print("Generating GradCAM Examples by Class")
-        print("="*60)
-        for cls in tqdm(classes):
+        print("="*70)
+        for cls in tqdm(classes, desc="Generating GradCAM Examples by Class"):
             cls_dir = Path("data/val")/cls
             cls_img_paths = random.sample(list(cls_dir.glob("*.jpg")), total_examples)
             save_path = Path(save_dir)/"gradcam"/cls
@@ -143,21 +145,46 @@ class GradCAM:
                 fig = self.visualize(cls_img_path)
                 fig.savefig(save_path/f"{cls}_{i}.png")
                 plt.close(fig)
-        
+
+        print("="*70)
+
+        # misclassified examples
+        print("="*70)
+
+        misclassified_dir = Path(save_dir)/"misclassified"
+        misclassified_dir.mkdir(parents=True, exist_ok=True)
+
+        image_paths = list(Path("data/val").rglob("*.jpg"))
+        random.shuffle(image_paths)
+        total_wrong = 0
+        with tqdm(total=total_examples, desc="Generating Misclassified Examples") as pbar:
+            for path in image_paths:
+                if total_wrong>=total_examples:
+                    break
+                true_label = path.parent.name
+                fig = self.visualize(path)
+                pred = fig.get_suptitle().split("Pred: ")[1]
+                if pred!=true_label:
+                    fig.savefig(misclassified_dir/f"{true_label}_as_{pred}_{total_wrong}.png")
+                    total_wrong+=1
+                    pbar.update(1)
+                plt.close(fig)
+
+        print("="*70)
+
 
         # confusion matrix
-        print("="*60)
-        print("Generating Confusion Matrix")
-        print("="*60)
+        print("="*70)
+        self._remove_hooks()
         all_preds = []
         all_labels = []
         self.model.eval()
         with torch.no_grad():
-            for x, y in tqdm(dataloader):
+            for x, y in tqdm(dataloader, desc="Generating Confusion Matrix"):
                 x = x.to(self.device)
                 preds = self.model(x).argmax(dim=1).cpu()
-                all_preds.extend(preds)
-                all_labels.extend(y)
+                all_preds.extend(preds.numpy())
+                all_labels.extend(y.numpy())
 
         
         conf_matrix = confusion_matrix(all_labels, all_preds)
@@ -167,28 +194,6 @@ class GradCAM:
         ax.set_title("Confusion Matrix")
         plt.savefig(f"{save_dir}/confusion_matrix.png")
         plt.close()
-
-        # misclassified examples
-        print("="*60)
-        print("Generating Misclassified Examples")
-        print("="*60)
-
-        misclassified_dir = Path(save_dir)/"misclassified"
-        misclassified_dir.mkdir(parents=True, exist_ok=True)
-
-        image_paths = list(Path("data/val").rglob("*.jpg"))
-        random.shuffle(image_paths)
-        total_wrong = 0
-        for path in image_paths:
-            if total_wrong>=total_examples:
-                break
-            true_label = path.parent.name
-            fig = self.visualize(path)
-            pred = fig.get_suptitle().split("Pred: ")[1]
-            if pred!=true_label:
-                fig.savefig(misclassified_dir/f"{true_label}_as_{pred}_{total_wrong}.png")
-                total_wrong+=1
-                print("Total Wrong:", total_wrong)
-            plt.close(fig)
+        print("="*70)
 
         print(f"Done! Results saved to {save_dir}")
