@@ -3,8 +3,9 @@
 *.tsv
 *.jpg
 /data/
-data_raw/
+/data_raw/
 wandb
+/gradcam_examples/
 logs/*/
 
 # Large model files

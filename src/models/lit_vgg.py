@@ -1,11 +1,15 @@
 import lightning as L
-from .vgg19 import VGGModel
+from .vgg19 import VGG19Model
 from torch import optim
 from torch import nn
 from torchmetrics import Accuracy
 
 class LitVGG(L.LightningModule):
-    def __init__(self, model = VGGModel(), optimizer = optim.Adam, scheduler = optim.lr_scheduler.OneCycleLR, lr=1e-3):
+    def __init__(self, 
+                 model = VGG19Model(), 
+                 optimizer = optim.Adam, 
+                 scheduler = optim.lr_scheduler.OneCycleLR, 
+                 lr=1e-3):
         super().__init__()
         self.save_hyperparameters(ignore=["model"])
         self.model = model
@@ -20,24 +24,36 @@ class LitVGG(L.LightningModule):
         x, y = batch
         logits = self.model(x)
         loss = self.loss_fn(logits, y)
+        
+        # accuracy
         preds = logits.argmax(dim=1)
         self.train_acc(preds, y)
-        self.log("train/train_loss", loss)
-        self.log("train/train_acc", self.train_acc, on_step=False, on_epoch=True)
+        
+        # logging
+        self.log("train_loss", loss, on_step=False, on_epoch=True)
+        self.log("train_acc", self.train_acc, on_step=False, on_epoch=True)
+        
         return loss
     
     def validation_step(self, batch, batch_idx):
         x, y = batch
         logits = self.model(x)
         loss = self.loss_fn(logits, y)
+        
+        # accuracy
         preds = logits.argmax(dim=1)
         self.val_acc(preds, y)
-        self.log("valid/valid_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("valid/valid_acc", self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
+
+        # logging
+        self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val_acc", self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
+
         return loss
     
     def configure_optimizers(self):
+        # create optimizer
         optimizer = self.optimizer(self.parameters(), lr=self.lr)
+        # create scheduler
         scheduler = self.scheduler(
             optimizer,
             max_lr=self.lr,
@@ -51,3 +67,7 @@ class LitVGG(L.LightningModule):
                 "frequency": 1,
             }
         }
+    
+    @property
+    def gradcam_target_layer(self):
+        return self.model.gradcam_target_layer

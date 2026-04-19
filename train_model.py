@@ -7,7 +7,11 @@ from torch.utils.data import DataLoader
 
 from src.data.dataset import BrainTumorDataset, load_dataset_from_directory
 from src.data.augmentation import get_train_transforms, get_val_transforms
-from src.models.lit_vgg_attention import VGG19Baseline, VGG19SEAttention, VGG19SoftmaxAttention
+from src.models.lit_vgg_attention import VGGLightningWrapper, VGG19Baseline, VGG19SEAttention, VGG19SoftmaxAttention
+from src.models.lit_vgg import LitVGG
+from src.visualization.gradcam import GradCAM
+from lightning.pytorch.loggers import TensorBoardLogger, WandbLogger
+from lightning.pytorch.callbacks import ModelCheckpoint, LearningRateMonitor
 
 torch.set_float32_matmul_precision('medium')
 
@@ -143,16 +147,12 @@ def main():
     
     if model_type == 'baseline':
         model = VGG19Baseline(
-            num_classes=4,
-            lr=args.lr,
             pretrained=True
         )
         print("  Model: VGG19 Baseline")
         
     elif model_type == 'softmax_attention':
         model = VGG19SoftmaxAttention(
-            num_classes=4,
-            lr=args.lr,
             pretrained=True,
             unfreeze_from_layer=None
         )
@@ -160,8 +160,6 @@ def main():
         
     elif model_type == 'softmax_attention_finetune':
         model = VGG19SoftmaxAttention(
-            num_classes=4,
-            lr=args.lr,
             pretrained=True,
             unfreeze_from_layer=35
         )
@@ -169,13 +167,15 @@ def main():
         
     elif model_type == 'se_attention':
         model = VGG19SEAttention(
-            num_classes=4,
             reduction=16,
-            lr=args.lr,
             pretrained=True
         )
         print("  Model: VGG19 + SE Attention")
+    else:
+        raise ValueError("Model is not defined")
     
+    model = VGGLightningWrapper(model, lr=args.lr)
+
     print("\n[5/5] Setting up trainer...")
     
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
@@ -184,16 +184,26 @@ def main():
         monitor='val_acc',
         mode='max',
         save_top_k=1,
-        verbose=True
     )
+
+    lr_callback = pl.callbacks.LearningRateMonitor(logging_interval="step")
     
+    # create loggers
+    tb_logger = TensorBoardLogger(save_dir="logs/", name="my_model")
+    loggers = [tb_logger]
+    try:
+        wandb_logger = WandbLogger(project = "deep_learning_project", log_model="all")
+        loggers.append(wandb_logger)
+    except Exception:
+        print("Wandb not available, logging to Tensorboard only.")
+
     trainer = pl.Trainer(
         max_epochs=args.epochs,
-        accelerator='gpu' if torch.cuda.is_available() else 'cpu',
+        accelerator='auto',
         devices=1,
-        callbacks=[checkpoint_callback],
-        enable_progress_bar=False,
-        log_every_n_steps=10
+        callbacks=[checkpoint_callback, lr_callback],
+        logger=loggers,
+        enable_progress_bar=True,
     )
     
     print("\n" + "=" * 70)
@@ -207,6 +217,25 @@ def main():
     print(f"  Best Validation Accuracy: {checkpoint_callback.best_model_score:.4f}")
     print(f"  Checkpoint: {checkpoint_callback.best_model_path}")
     print("=" * 70)
+    
+    # Generate GradCAM visualizations
+    print("\n" + "=" * 70)
+    print("GENERATING GRADCAM VISUALIZATIONS")
+    print("=" * 70)
+    
+    try:
+        gradcam_save_dir = os.path.join("gradcam_examples", experiment_name)
+        model = model.to("cuda" if torch.cuda.is_available() else "cpu")
+        gradcam = GradCAM(model, model.gradcam_target_layer)
+        gradcam.examples(
+            dataloader=val_loader,
+            save_dir=gradcam_save_dir,
+            total_examples=3,
+            seed=42
+        )
+        print(f"\nGradCAM visualizations saved to: {gradcam_save_dir}")
+    except Exception as e:
+        print(f"[WARNING] GradCAM visualization failed: {e}")
 
 
 if __name__ == '__main__':
