@@ -92,6 +92,8 @@ class VGG19Baseline(nn.Module):
 class VGG19SEAttention(nn.Module):
     def __init__(self, num_classes=4, reduction=16, pretrained=True):
         super().__init__()
+        self.num_classes = num_classes
+
         
         self.model = VGG19Model(
             attention_type='se',
@@ -112,6 +114,7 @@ class VGG19SEAttention(nn.Module):
 class VGG19SoftmaxAttention(nn.Module):
     def __init__(self, num_classes=4, pretrained=True, unfreeze_from_layer=None):
         super().__init__()
+        self.num_classes = num_classes
         
         self.model = VGG19Model(
             attention_type='softmax',
