@@ -12,87 +12,46 @@ from src.models.lit_vgg import LitVGG
 from src.visualization.gradcam import GradCAM
 from lightning.pytorch.loggers import TensorBoardLogger, WandbLogger
 from lightning.pytorch.callbacks import ModelCheckpoint, LearningRateMonitor
+from src.experiments.config import setup_experiment, build_model
+import yaml
 
 torch.set_float32_matmul_precision('medium')
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Brain Tumor Classification')
+    parser = argparse.ArgumentParser(description='Brain Tumor Classification')    
     
-    parser.add_argument('--experiment', type=str, required=True,
-                       choices=['baseline', 'baseline_aug', 
-                               'softmax_attention', 'softmax_attention_finetune',
-                               'se_attention', 'se_attention_aug'],
-                       help='Experiment type')
-    
-    parser.add_argument('--epochs', type=int, default=30,
-                       help='Number of training epochs')
-    parser.add_argument('--batch_size', type=int, default=64,
-                       help='Batch size')
-    parser.add_argument('--lr', type=float, default=0.001,
-                       help='Learning rate')
-    parser.add_argument('--num_workers', type=int, default=4,
-                       help='DataLoader workers')
-    
-    parser.add_argument('--data_dir', type=str, default='data',
-                       help='Data directory')
-    
-    parser.add_argument('--checkpoint_dir', type=str, default='checkpoints',
-                       help='Checkpoint directory')
-    
+    parser.add_argument("--config", type=str, required=True)
     args = parser.parse_args()
-    
+    with open(args.config) as f:
+        config = yaml.safe_load(f)
+        
+    config = setup_experiment(config)
+    use_augmentation = config["use_augmentation"]
+    model_type = config["model_description"]
+    experiment_name = config["experiment_name"]
+
     print("=" * 70)
-    print(f"EXPERIMENT: {args.experiment}")
+    print(f"EXPERIMENT: {config["experiment"]}")
     print("=" * 70)
-    
-    if args.experiment == 'baseline':
-        use_augmentation = False
-        model_type = 'baseline'
-        experiment_name = 'vgg19_baseline'
-        
-    elif args.experiment == 'baseline_aug':
-        use_augmentation = True
-        model_type = 'baseline'
-        experiment_name = 'vgg19_baseline_aug'
-        
-    elif args.experiment == 'softmax_attention':
-        use_augmentation = False
-        model_type = 'softmax_attention'
-        experiment_name = 'vgg19_softmax_attention'
-        
-    elif args.experiment == 'softmax_attention_finetune':
-        use_augmentation = False
-        model_type = 'softmax_attention_finetune'
-        experiment_name = 'vgg19_softmax_attention_finetune'
-        
-    elif args.experiment == 'se_attention':
-        use_augmentation = False
-        model_type = 'se_attention'
-        experiment_name = 'vgg19_se_attention'
-        
-    elif args.experiment == 'se_attention_aug':
-        use_augmentation = True
-        model_type = 'se_attention'
-        experiment_name = 'vgg19_se_attention_aug'
     
     print(f"  Model Type: {model_type}")
     print(f"  Augmentation: {'Enabled' if use_augmentation else 'Disabled'}")
     print(f"  Training Mode: Feature Extraction (Frozen Backbone)")
-    print(f"  Epochs: {args.epochs}")
-    print(f"  Batch Size: {args.batch_size}")
-    print(f"  Learning Rate: {args.lr}")
+    print(f"  Epochs: {config['epochs']}")
+    print(f"  Batch Size: {config['batch_size']}")
+    print(f"  Learning Rate: {config['lr']}")
     print("=" * 70)
     
     print("\n[1/5] Loading datasets...")
     
     train_paths, train_labels = load_dataset_from_directory(
-        data_dir=args.data_dir,
+        data_dir=config["data_dir"],
         split='train'
     )
     
     val_paths, val_labels = load_dataset_from_directory(
-        data_dir=args.data_dir,
+        data_dir=config["data_dir"],
         split='val'
     )
     
@@ -126,17 +85,17 @@ def main():
     
     train_loader = DataLoader(
         train_dataset,
-        batch_size=args.batch_size,
+        batch_size=config["batch_size"],
         shuffle=True,
-        num_workers=args.num_workers,
+        num_workers=config["num_workers"],
         pin_memory=True
     )
     
     val_loader = DataLoader(
         val_dataset,
-        batch_size=args.batch_size,
+        batch_size=config["batch_size"],
         shuffle=False,
-        num_workers=args.num_workers,
+        num_workers=config["num_workers"],
         pin_memory=True
     )
     
@@ -145,41 +104,12 @@ def main():
     
     print("\n[4/5] Creating model...")
     
-    if model_type == 'baseline':
-        model = VGG19Baseline(
-            pretrained=True
-        )
-        print("  Model: VGG19 Baseline")
-        
-    elif model_type == 'softmax_attention':
-        model = VGG19SoftmaxAttention(
-            pretrained=True,
-            unfreeze_from_layer=None
-        )
-        print("  Model: VGG19 + Softmax Attention (Frozen)")
-        
-    elif model_type == 'softmax_attention_finetune':
-        model = VGG19SoftmaxAttention(
-            pretrained=True,
-            unfreeze_from_layer=35
-        )
-        print("  Model: VGG19 + Softmax Attention (Partial Fine-tune)")
-        
-    elif model_type == 'se_attention':
-        model = VGG19SEAttention(
-            reduction=16,
-            pretrained=True
-        )
-        print("  Model: VGG19 + SE Attention")
-    else:
-        raise ValueError("Model is not defined")
+    model = build_model(config)
     
-    model = VGGLightningWrapper(model, lr=args.lr)
-
     print("\n[5/5] Setting up trainer...")
     
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
-        dirpath=os.path.join(args.checkpoint_dir, experiment_name),
+        dirpath=os.path.join(config["checkpoint_dir"], config["experiment_name"]),
         filename='best-{epoch:02d}-{val_acc:.4f}',
         monitor='val_acc',
         mode='max',
@@ -198,7 +128,7 @@ def main():
         print("Wandb not available, logging to Tensorboard only.")
 
     trainer = pl.Trainer(
-        max_epochs=args.epochs,
+        max_epochs=config["epochs"],
         accelerator='auto',
         devices=1,
         callbacks=[checkpoint_callback, lr_callback],
