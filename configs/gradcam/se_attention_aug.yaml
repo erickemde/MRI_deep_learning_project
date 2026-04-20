@@ -1,0 +1,4 @@
+base: configs/train/se_attention_aug.yaml
+checkpoint_path: checkpoints/se_attention_aug/...
+total_examples: 3
+seed: 42

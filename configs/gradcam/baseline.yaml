@@ -1,0 +1,4 @@
+base: configs/train/baseline.yaml
+checkpoint_path: checkpoints/vgg19_baseline/best-epoch=00-val_acc=0.8327.ckpt
+total_examples: 3
+seed: 42
