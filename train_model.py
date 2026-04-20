@@ -22,7 +22,8 @@ def main():
     parser.add_argument('--experiment', type=str, required=True,
                        choices=['baseline', 'baseline_aug', 
                                'softmax_attention', 'softmax_attention_finetune',
-                               'se_attention', 'se_attention_aug'],
+                               'softmax_attention_finetune_aug', 'se_attention', 
+                               'se_attention_aug'],
                        help='Experiment type')
     
     parser.add_argument('--epochs', type=int, default=30,
@@ -65,6 +66,11 @@ def main():
         use_augmentation = False
         model_type = 'softmax_attention_finetune'
         experiment_name = 'vgg19_softmax_attention_finetune'
+
+    elif args.experiment == 'softmax_attention_finetune_aug':
+        use_augmentation = True
+        model_type = 'softmax_attention_finetune'
+        experiment_name = 'vgg19_softmax_attention_finetune_aug'
         
     elif args.experiment == 'se_attention':
         use_augmentation = False
@@ -103,7 +109,7 @@ def main():
         print("     - RandomHorizontalFlip")
         print("     - RandomRotation")
         print("     - RandomAffine")
-        print("     - ColorJitter")
+        # print("     - ColorJitter")
     else:
         print("  No augmentation")
     
@@ -161,7 +167,7 @@ def main():
     elif model_type == 'softmax_attention_finetune':
         model = VGG19SoftmaxAttention(
             pretrained=True,
-            unfreeze_from_layer=35
+            unfreeze_from_layer=40 # Using 40, since 35 might overfit with the relatively small number of training images
         )
         print("  Model: VGG19 + Softmax Attention (Partial Fine-tune)")
         
@@ -189,7 +195,7 @@ def main():
     lr_callback = pl.callbacks.LearningRateMonitor(logging_interval="step")
     
     # create loggers
-    tb_logger = TensorBoardLogger(save_dir="logs/", name="my_model")
+    tb_logger = TensorBoardLogger(save_dir="logs/", name=experiment_name)
     loggers = [tb_logger]
     try:
         wandb_logger = WandbLogger(project = "deep_learning_project", log_model="all")
