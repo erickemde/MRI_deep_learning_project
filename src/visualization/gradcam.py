@@ -175,7 +175,6 @@ class GradCAM:
 
         # confusion matrix
         print("="*70)
-        self._remove_hooks()
         all_preds = []
         all_labels = []
         self.model.eval()
