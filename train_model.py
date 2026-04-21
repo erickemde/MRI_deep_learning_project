@@ -14,6 +14,7 @@ from lightning.pytorch.loggers import TensorBoardLogger, WandbLogger
 from lightning.pytorch.callbacks import ModelCheckpoint, LearningRateMonitor
 from src.experiments.config import setup_experiment, build_model
 import yaml
+from pathlib import Path
 
 torch.set_float32_matmul_precision('medium')
 
@@ -109,7 +110,7 @@ def main():
     print("\n[5/5] Setting up trainer...")
     
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
-        dirpath=os.path.join(config["checkpoint_dir"], config["experiment_name"]),
+        dirpath=os.path.join(config["checkpoint_dir"]),
         filename='best-{epoch:02d}-{val_acc:.4f}',
         monitor='val_acc',
         mode='max',
@@ -154,16 +155,16 @@ def main():
     print("=" * 70)
     
     try:
-        gradcam_save_dir = os.path.join("gradcam_examples", experiment_name)
+        checkpoint_stem = Path(checkpoint_callback.best_model_path).stem
+        gradcam_save_dir = os.path.join("gradcam_examples", experiment_name, checkpoint_stem)
         model = model.to("cuda" if torch.cuda.is_available() else "cpu")
         gradcam = GradCAM(model, model.gradcam_target_layer)
         gradcam.examples(
             dataloader=val_loader,
             save_dir=gradcam_save_dir,
-            total_examples=3,
-            seed=42
+            total_examples=config["total_examples"],
+            seed=config["seed"]
         )
-        print(f"\nGradCAM visualizations saved to: {gradcam_save_dir}")
     except Exception as e:
         print(f"[WARNING] GradCAM visualization failed: {e}")
 
