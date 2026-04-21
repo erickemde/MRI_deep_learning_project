@@ -14,6 +14,7 @@ from lightning.pytorch.loggers import TensorBoardLogger, WandbLogger
 from lightning.pytorch.callbacks import ModelCheckpoint, LearningRateMonitor
 from src.experiments.config import setup_experiment, build_model
 import yaml
+from pathlib import Path
 
 def main():
     parser = argparse.ArgumentParser()
@@ -21,12 +22,8 @@ def main():
     args = parser.parse_args()
 
     with open(args.config) as f:
-        gradcam_config = yaml.safe_load(f)
-    
-    with open(gradcam_config["base"]) as f:
         config = yaml.safe_load(f)
-
-    config.update(gradcam_config)
+    
     config = setup_experiment(config)
     experiment_name = config["experiment_name"]
     model_type = config["model_description"]
@@ -78,7 +75,7 @@ def main():
     
     print("\n[3/4] Creating model...")
     model = VGGLightningWrapper.load_from_checkpoint(
-        config["checkpoint_path"],
+        config["model_checkpoint_path"],
         model = build_model(config).model
     )
       
@@ -87,16 +84,16 @@ def main():
     print("[4/4] Generating Gradcam Visualizations")
     print("=" * 70)
     try:
-        gradcam_save_dir = os.path.join("gradcam_examples", experiment_name)
+        checkpoint_path = Path(config["model_checkpoint_path"]).stem
+        gradcam_save_dir = os.path.join("gradcam_examples", experiment_name, checkpoint_path)
         model = model.to("cuda" if torch.cuda.is_available() else "cpu")
         gradcam = GradCAM(model, model.gradcam_target_layer)
         gradcam.examples(
             dataloader=val_loader,
             save_dir=gradcam_save_dir,
-            total_examples=3,
-            seed=42
+            total_examples=config["total_examples"],
+            seed=config["seed"]
         )
-        print(f"\nGradCAM visualizations saved to: {gradcam_save_dir}")
     except Exception as e:
         print(f"[WARNING] GradCAM visualization failed: {e}")
         
