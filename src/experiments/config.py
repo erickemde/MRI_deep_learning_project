@@ -1,7 +1,7 @@
 from src.models.lit_vgg_attention import *
 
 # define experiments
-# model type | experiment_name, model description, use_augmentation, model_type, kwargs
+# experiment | experiment_name, model_description, use_augmentation, model_class, kwargs
 EXPERIMENTS = {
     "baseline": (
         "vgg19_baseline", "VGG19 Baseline", False, VGG19Baseline, {}
