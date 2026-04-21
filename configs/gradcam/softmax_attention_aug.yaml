@@ -1,4 +1,0 @@
-base: configs/train/softmax_attention_aug.yaml
-checkpoint_path: checkpoints/softmax_attention_aug/...
-total_examples: 3
-seed: 42

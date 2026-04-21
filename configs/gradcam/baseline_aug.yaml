@@ -1,4 +1,0 @@
-base: configs/train/baseline_aug.yaml
-checkpoint_path: checkpoints/baseline_aug/...
-total_examples: 3
-seed: 42

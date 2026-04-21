@@ -1,0 +1,13 @@
+# training arguments
+experiment: se_attention_aug
+epochs: 1
+batch_size: 64
+lr: 0.001
+num_workers: 0
+data_dir: data
+
+# gradcam arguments
+# checkpoint path only used for gradcam_inference.py
+gradcam_checkpoint_path: None
+total_examples: 3
+seed: 42

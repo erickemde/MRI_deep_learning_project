@@ -1,6 +1,0 @@
-experiment: se_attention_aug
-epochs: 30
-batch_size: 64
-lr: 0.001
-num_workers: 0
-data_dir: data
