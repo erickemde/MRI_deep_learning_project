@@ -33,7 +33,7 @@ def main():
     experiment_name = config["experiment_name"]
 
     print("=" * 70)
-    print(f"EXPERIMENT: {config["experiment"]}")
+    print(f"EXPERIMENT: {config['experiment']}")
     print("=" * 70)
     
     print(f"  Model Type: {model_type}")
