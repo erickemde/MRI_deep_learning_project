@@ -20,6 +20,14 @@ Project Repo for CS7643 (Deep Learning)
     - In remote terminal: "mkdir -p ~/.kaggle"
     - In local terminal: "scp C:\Users\YourName\.kaggle\kaggle.json YourEmail@login-ice.pace.gatech.edu:~/.kaggle/kaggle.json"
     - Update permissions in remote terminal: "chmod 600 ~/.kaggle/kaggle.json"
+6. Weights and Biases API
+    - Create an account at [W&B](wandb.ai)
+    - In User Settings, create an API key
+    - In ICE-PACE, enter command "wandb login" and paste API key
+7. Slurm batch file
+    - Create an sbatch file using "template.sbatch". Here is a helpful resource [Using Slurm on ICE](https://gatech.service-now.com/home?id=kb_article_view&sysparm_article=KB0042096)
+    - Create an output directory if needed (e.g. /slurm_out/)
+    - Execute "sbatch YourFilename.sbatch"
 
 ## Data Setup
 1. Create an environment with required packages
