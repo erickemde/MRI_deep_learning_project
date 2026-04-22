@@ -1,0 +1,13 @@
+# training arguments
+experiment: softmax_attention_finetune
+epochs: 30
+batch_size: 64
+lr: 0.001
+num_workers: 0
+data_dir: data
+
+# gradcam arguments
+# checkpoint path only used for gradcam_inference.py
+checkpoint_path: None
+total_examples: 3
+seed: 42

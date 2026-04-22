@@ -135,7 +135,6 @@ class GradCAM:
         classes = ['glioma', 'meningioma', 'notumor', 'pituitary']
 
         # gradcam examples per class
-        print("="*70)
         for cls in tqdm(classes, desc="Generating GradCAM Examples by Class"):
             cls_dir = Path("data/val")/cls
             cls_img_paths = random.sample(list(cls_dir.glob("*.jpg")), total_examples)
@@ -146,10 +145,8 @@ class GradCAM:
                 fig.savefig(save_path/f"{cls}_{i}.png")
                 plt.close(fig)
 
-        print("="*70)
 
         # misclassified examples
-        print("="*70)
 
         misclassified_dir = Path(save_dir)/"misclassified"
         misclassified_dir.mkdir(parents=True, exist_ok=True)
@@ -170,12 +167,9 @@ class GradCAM:
                     pbar.update(1)
                 plt.close(fig)
 
-        print("="*70)
 
 
         # confusion matrix
-        print("="*70)
-        self._remove_hooks()
         all_preds = []
         all_labels = []
         self.model.eval()
@@ -196,4 +190,4 @@ class GradCAM:
         plt.close()
         print("="*70)
 
-        print(f"Done! Results saved to {save_dir}")
+        print(f"\nGradCAM visualizations saved to: {save_dir}")
