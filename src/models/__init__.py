@@ -1,5 +1,4 @@
-from .vgg19_attention import VGG19Model, SEAttention, SoftmaxAttention
-from .lit_vgg_attention import VGG19Baseline, VGG19SEAttention, VGG19SoftmaxAttention
+from .vgg19 import VGG19Baseline, VGG19Model, SEAttention, SoftmaxAttention, VGG19SEAttention, VGG19SoftmaxAttention
 
 __all__ = [
     'VGG19Model',

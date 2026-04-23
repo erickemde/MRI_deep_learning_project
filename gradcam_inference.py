@@ -7,11 +7,8 @@ from torch.utils.data import DataLoader
 
 from src.data.dataset import BrainTumorDataset, load_dataset_from_directory
 from src.data.augmentation import get_train_transforms, get_val_transforms
-from src.models.lit_vgg_attention import VGGLightningWrapper, VGG19Baseline, VGG19SEAttention, VGG19SoftmaxAttention
-from src.models.lit_vgg import LitVGG
+from src.models.LightningWrapper import LightningWrapper
 from src.visualization.gradcam import GradCAM
-from lightning.pytorch.loggers import TensorBoardLogger, WandbLogger
-from lightning.pytorch.callbacks import ModelCheckpoint, LearningRateMonitor
 from src.experiments.config import setup_experiment, build_model
 import yaml
 from pathlib import Path
@@ -74,7 +71,7 @@ def main():
     
     
     print("\n[3/4] Creating model...")
-    model = VGGLightningWrapper.load_from_checkpoint(
+    model = LightningWrapper.load_from_checkpoint(
         config["model_checkpoint_path"],
         model = build_model(config).model
     )

@@ -7,11 +7,8 @@ from torch.utils.data import DataLoader
 
 from src.data.dataset import BrainTumorDataset, load_dataset_from_directory
 from src.data.augmentation import get_train_transforms, get_val_transforms
-from src.models.lit_vgg_attention import VGGLightningWrapper, VGG19Baseline, VGG19SEAttention, VGG19SoftmaxAttention
-from src.models.lit_vgg import LitVGG
 from src.visualization.gradcam import GradCAM
 from lightning.pytorch.loggers import TensorBoardLogger, WandbLogger
-from lightning.pytorch.callbacks import ModelCheckpoint, LearningRateMonitor
 from src.experiments.config import setup_experiment, build_model
 from huggingface_upload import huggingface_upload_model, check_hf_login
 import yaml
@@ -153,24 +150,25 @@ def main():
     print(f"  Checkpoint: {checkpoint_callback.best_model_path}")
     print("=" * 70)
     
-    # Generate GradCAM visualizations
-    print("\n" + "=" * 70)
-    print("GENERATING GRADCAM VISUALIZATIONS")
-    print("=" * 70)
-    
-    try:
-        checkpoint_stem = Path(checkpoint_callback.best_model_path).stem
-        gradcam_save_dir = os.path.join("gradcam_examples", experiment_name, checkpoint_stem)
-        model = model.to("cuda" if torch.cuda.is_available() else "cpu")
-        gradcam = GradCAM(model, model.gradcam_target_layer)
-        gradcam.examples(
-            dataloader=val_loader,
-            save_dir=gradcam_save_dir,
-            total_examples=config["total_examples"],
-            seed=config["seed"]
-        )
-    except Exception as e:
-        print(f"[WARNING] GradCAM visualization failed: {e}")
+    if config['generate_gradcam']:
+        # Generate GradCAM visualizations
+        print("\n" + "=" * 70)
+        print("GENERATING GRADCAM VISUALIZATIONS")
+        print("=" * 70)
+        
+        try:
+            checkpoint_stem = Path(checkpoint_callback.best_model_path).stem
+            gradcam_save_dir = os.path.join("gradcam_examples", experiment_name, checkpoint_stem)
+            model = model.to("cuda" if torch.cuda.is_available() else "cpu")
+            gradcam = GradCAM(model, model.gradcam_target_layer)
+            gradcam.examples(
+                dataloader=val_loader,
+                save_dir=gradcam_save_dir,
+                total_examples=config["total_examples"],
+                seed=config["seed"]
+            )
+        except Exception as e:
+            print(f"[WARNING] GradCAM visualization failed: {e}")
 
     # Save to huggingface if user is signed in
     if hf_status:

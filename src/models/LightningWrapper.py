@@ -4,9 +4,8 @@ from torch import nn, optim
 from torchmetrics import Accuracy
 from torch import nn
 
-from .vgg19_attention import VGG19Model
 
-class VGGLightningWrapper(pl.LightningModule):
+class LightningWrapper(pl.LightningModule):
     def __init__(self, model, lr=1e-3):
         super().__init__()
         self.save_hyperparameters(ignore=["model"])
@@ -67,66 +66,3 @@ class VGGLightningWrapper(pl.LightningModule):
     def gradcam_target_layer(self):
         """Returns the target layer for GradCAM visualization"""
         return self.model.gradcam_target_layer
-    
-
-class VGG19Baseline(nn.Module):
-    def __init__(self, num_classes=4, pretrained=True):
-        super().__init__()
-        self.num_classes = num_classes
-        
-        self.model = VGG19Model(
-            attention_type=None,
-            num_classes=num_classes,
-            pretrained=pretrained
-        )
-    
-    def forward(self, x):
-        return self.model(x)
-    
-    @property
-    def gradcam_target_layer(self):
-        """Returns the target layer for GradCAM visualization"""
-        return self.model.vgg.features[-4]
-
-
-class VGG19SEAttention(nn.Module):
-    def __init__(self, num_classes=4, reduction=16, pretrained=True):
-        super().__init__()
-        self.num_classes = num_classes
-
-        
-        self.model = VGG19Model(
-            attention_type='se',
-            num_classes=num_classes,
-            pretrained=pretrained,
-            reduction_ratio=reduction
-        )
-    
-    def forward(self, x):
-        return self.model(x)
-    
-    @property
-    def gradcam_target_layer(self):
-        """Returns the target layer for GradCAM visualization"""
-        return self.model.features[-4]
-
-
-class VGG19SoftmaxAttention(nn.Module):
-    def __init__(self, num_classes=4, pretrained=True, unfreeze_from_layer=None):
-        super().__init__()
-        self.num_classes = num_classes
-        
-        self.model = VGG19Model(
-            attention_type='softmax',
-            num_classes=num_classes,
-            pretrained=pretrained,
-            unfreeze_from_layer=unfreeze_from_layer
-        )
-    
-    def forward(self, x):
-        return self.model(x)
-    
-    @property
-    def gradcam_target_layer(self):
-        """Returns the target layer for GradCAM visualization"""
-        return self.model.features[-4]

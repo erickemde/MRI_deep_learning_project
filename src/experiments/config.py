@@ -1,4 +1,5 @@
-from src.models.lit_vgg_attention import *
+from src.models.LightningWrapper import LightningWrapper
+from src.models.vgg19 import VGG19Baseline, VGG19SEAttention, VGG19SoftmaxAttention
 
 # define experiments
 # experiment | experiment_name, model_description, use_augmentation, model_class, kwargs
@@ -45,7 +46,7 @@ def setup_experiment(config):
 def build_model(config):
     model = config["model_class"](pretrained=True, **config["model_kwargs"])
     print("\tModel:", config["model_description"])
-    return VGGLightningWrapper(model, lr=config["lr"])
+    return LightningWrapper(model, lr=config["lr"])
 
 def setup_ablation_study(config):
     '''

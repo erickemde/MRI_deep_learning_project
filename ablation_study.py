@@ -7,8 +7,6 @@ from torch.utils.data import DataLoader
 
 from src.data.dataset import BrainTumorDataset, load_dataset_from_directory
 from src.data.augmentation import get_train_transforms, get_val_transforms
-from src.models.lit_vgg_attention import VGGLightningWrapper, VGG19Baseline, VGG19SEAttention, VGG19SoftmaxAttention
-from src.models.lit_vgg import LitVGG
 from src.visualization.gradcam import GradCAM
 from lightning.pytorch.loggers import TensorBoardLogger, WandbLogger
 from lightning.pytorch.callbacks import ModelCheckpoint, LearningRateMonitor
