@@ -8,6 +8,7 @@ data_dir: data
 
 # gradcam arguments
 # checkpoint path only used for gradcam_inference.py
+generate_gradcam: True
 checkpoint_path: None
 total_examples: 3
 seed: 42
