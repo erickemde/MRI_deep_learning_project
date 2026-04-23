@@ -46,3 +46,24 @@ def build_model(config):
     model = config["model_class"](pretrained=True, **config["model_kwargs"])
     print("\tModel:", config["model_description"])
     return VGGLightningWrapper(model, lr=config["lr"])
+
+def setup_ablation_study(config):
+    '''
+    Create a dictionary of configs for each experiment in EXPERIMENTS, using shared hyperparameters from the config file
+    '''
+    experiment_dict = {}
+    for experiment, args in EXPERIMENTS.items():
+        experiment_name, model_decription, use_augmentation, model_class, model_kwargs = args
+
+        experiment_dict[experiment] = {
+            **config,
+            "experiment_name": experiment_name,
+            "model_description": model_decription,
+            "use_augmentation": use_augmentation,
+            "model_class": model_class,
+            "model_kwargs": model_kwargs,
+            "checkpoint_dir": f"checkpoints/{experiment_name}",
+            "gradcam_dir": f"gradcam_examples/{experiment_name}"
+        }
+    
+    return experiment_dict
