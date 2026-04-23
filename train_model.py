@@ -13,6 +13,7 @@ from src.visualization.gradcam import GradCAM
 from lightning.pytorch.loggers import TensorBoardLogger, WandbLogger
 from lightning.pytorch.callbacks import ModelCheckpoint, LearningRateMonitor
 from src.experiments.config import setup_experiment, build_model
+from huggingface_upload import huggingface_upload_model, check_hf_login
 import yaml
 from pathlib import Path
 
@@ -20,6 +21,9 @@ torch.set_float32_matmul_precision('medium')
 
 
 def main():
+    
+    hf_status = check_hf_login()
+    
     parser = argparse.ArgumentParser(description='Brain Tumor Classification')    
     
     parser.add_argument("--config", type=str, required=True)
@@ -168,6 +172,13 @@ def main():
     except Exception as e:
         print(f"[WARNING] GradCAM visualization failed: {e}")
 
-
+    # Save to huggingface if user is signed in
+    if hf_status:
+        print("\n" + "=" * 70)
+        print("SAVING TO HUGGINGFACE")
+        print("=" * 70)
+        
+        huggingface_upload_model(checkpoint_callback.best_model_path)
+    
 if __name__ == '__main__':
     main()

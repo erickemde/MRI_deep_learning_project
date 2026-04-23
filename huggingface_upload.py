@@ -54,21 +54,23 @@ def check_hf_login():
         api = HfApi()
         user_info = api.whoami()
         print(f"[HUGGINGFACE] Logged in as: {user_info["name"]}")
+        return True
     except Exception:
         print("NOT LOGGED IN TO HUGGINGFACE")
         print("Please log into huggingface using 'hf auth login' in the command line with your api key")
-        sys.exit(1)
+        return False
         
 def get_file_path():
     root = tk.Tk()
     
 if __name__=="__main__":
-    check_hf_login()
+    hf_status = check_hf_login()
     
-    parser = argparse.ArgumentParser(description='Upload Model to Huggingface')
-    parser.add_argument("--model_path", type=str, required=True)
-    
-    args = parser.parse_args()
-    
-    huggingface_upload_model(args.model_path)
+    if hf_status:
+        parser = argparse.ArgumentParser(description='Upload Model to Huggingface')
+        parser.add_argument("--model_path", type=str, required=True)
+        
+        args = parser.parse_args()
+        
+        huggingface_upload_model(args.model_path)
     
