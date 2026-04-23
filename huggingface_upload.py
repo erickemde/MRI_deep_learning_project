@@ -1,7 +1,6 @@
 from huggingface_hub import HfApi
 from pathlib import Path
 import argparse
-import tkinter as tk
 import src.experiments.config as cfg
 
 ORG_NAME = "gatech-deep-learning-project"
