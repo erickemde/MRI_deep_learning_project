@@ -13,9 +13,9 @@ class VGGLightningWrapper(pl.LightningModule):
         self.model = model
         self.loss_fn = nn.CrossEntropyLoss()
         self.lr = lr
-        num_classes = model.num_classes
-        self.train_acc = Accuracy(task="multiclass", num_classes=num_classes)
-        self.val_acc = Accuracy(task="multiclass", num_classes=num_classes)
+        self.num_classes = model.num_classes
+        self.train_acc = Accuracy(task="multiclass", num_classes=self.num_classes)
+        self.val_acc = Accuracy(task="multiclass", num_classes=self.num_classes)
 
     def forward(self, x):
         return self.model(x)

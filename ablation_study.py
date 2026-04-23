@@ -15,8 +15,11 @@ from lightning.pytorch.callbacks import ModelCheckpoint, LearningRateMonitor
 from src.experiments.config import setup_experiment, build_model, setup_ablation_study
 import yaml
 from pathlib import Path
+import wandb
 
 torch.set_float32_matmul_precision('medium')
+
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 def _parse_config():
     '''
@@ -29,8 +32,14 @@ def _parse_config():
     with open(args.config) as f:
         config = yaml.safe_load(f)
 
+    # Set defaults
+    config.setdefault('generate_gradcam', False)
+    config.setdefault('evaluate', 'no')
+
     print("=" * 70)
     print(f"EXPERIMENT: {config['experiment']}")
+    print(f"    Generate GradCAM? {config['generate_gradcam']}")
+    print(f"    Evaluate model(s)? {config['evaluate']}")
     print("=" * 70)
 
     if config['experiment'] == "ablation":
@@ -55,6 +64,11 @@ def _load_augment_data(config, augment):
     val_paths, val_labels = load_dataset_from_directory(
         data_dir=config['data_dir'],
         split='val'
+    )
+
+    test_paths, test_labels = load_dataset_from_directory(
+        data_dir=config['data_dir'],
+        split='test'
     )
 
     print("\n[2/5] Creating transforms...")
@@ -106,6 +120,12 @@ def _load_augment_data(config, augment):
         transform=val_transform
     )
     
+    test_dataset = BrainTumorDataset(
+        image_paths=test_paths,
+        labels=test_labels,
+        transform=val_transform
+    )
+    
     train_loader = DataLoader(
         train_dataset,
         batch_size=config["batch_size"],
@@ -122,21 +142,29 @@ def _load_augment_data(config, augment):
         pin_memory=True
     )
 
+    test_loader = DataLoader(
+        test_dataset,
+        batch_size=config["batch_size"],
+        shuffle=False,
+        num_workers=config["num_workers"],
+        pin_memory=True
+    )
+
     print(f"  Train batches: {len(train_loader)}")
     print(f"  Val batches: {len(val_loader)}")
+    print(f"  Test batches: {len(test_loader)}")
 
-    return train_loader, val_loader, train_aug_loader
+    return train_loader, val_loader, train_aug_loader, test_loader
 
 def _logger_setup(config):
     # create loggers
     tb_logger = TensorBoardLogger(save_dir="logs/", name=config['experiment_name'])
-    loggers = [tb_logger]
     try:
         wandb_logger = WandbLogger(project = "deep_learning_project", log_model="all", name=config['experiment_name'])
-        loggers.append(wandb_logger)
     except Exception:
+        wandb_logger = None
         print("Wandb not available, logging to Tensorboard only.")
-    return loggers
+    return tb_logger, wandb_logger
 
 def _trainer_setup(config):
     '''
@@ -152,18 +180,36 @@ def _trainer_setup(config):
 
     lr_callback = pl.callbacks.LearningRateMonitor(logging_interval="step")
 
-    loggers = _logger_setup(config)
+    tb_logger, wandb_logger = _logger_setup(config)
 
     trainer = pl.Trainer(
         max_epochs=config["epochs"],
         accelerator='auto',
         devices=1,
         callbacks=[checkpoint_callback, lr_callback],
-        logger=loggers,
+        logger=[tb_logger, wandb_logger],
         enable_progress_bar=False,
     )
 
-    return trainer, checkpoint_callback
+    return trainer, checkpoint_callback, wandb_logger
+
+def _evaluate(model, test_loader):
+    '''
+    Evaluate final model on test set
+    '''
+    model.eval()
+    model.to(DEVICE)
+    correct = 0
+    total = 0
+    with torch.no_grad():
+        for images, labels in test_loader:
+            images, labels = images.to(DEVICE), labels.to(DEVICE)
+            out = model(images)
+            _, pred = out.max(1)
+            correct += pred.eq(labels).sum().item()
+            total += labels.size(0)
+    acc = correct / total
+    return acc
 
 def main():
     # Parse config
@@ -171,18 +217,18 @@ def main():
 
     # Load data
     get_augmented_data = any([v['use_augmentation'] for v in experiment_dict.values()]) # load augmented data if any experiments use augmentation
-    train_loader, val_loader, train_aug_loader = _load_augment_data(config, get_augmented_data)
+    train_loader, val_loader, train_aug_loader, test_loader = _load_augment_data(config, get_augmented_data)
 
     # Build and train models
     print("\n[4/5] Creating model(s)...")
-    models = {}
+
     n_models = len(experiment_dict.keys())
     for i, (name, c) in enumerate(experiment_dict.items()):
         model = build_model(c)
 
         # Set up trainer and loggers
         print("\n[5/5] Setting up trainer...")
-        trainer, checkpoint_callback = _trainer_setup(c)
+        trainer, checkpoint_callback, wandb_logger = _trainer_setup(c)
 
         print("\n" + "=" * 70)
         print(f"TRAINING STARTED: Experiment {name} [{i+1}/{n_models}]")
@@ -202,13 +248,22 @@ def main():
         else:
             trainer.fit(model, train_loader, val_loader)
 
+        # Evaluate final model
+        test_acc = 0.
+        if config['evaluate']=='best':
+            best_model = VGGLightningWrapper.load_from_checkpoint(checkpoint_callback.best_model_path, model=model.model)
+            test_acc = _evaluate(best_model, test_loader)
+        elif config['evaluate']=='last':
+            test_acc = _evaluate(model, test_loader)
+
         print("\n" + "=" * 70)
         print(f"EXPERIMENT '{c['experiment_name']}' COMPLETED")
         print(f"  Best Validation Accuracy: {checkpoint_callback.best_model_score:.4f}")
+        print(f"  Test Accuracy: {test_acc:.4f} (evaluate = {config['evaluate']})")
         print(f"  Checkpoint: {checkpoint_callback.best_model_path}")
         print("=" * 70)
 
-        if config['generate_gradcam']:
+        if config['generate_gradcam']==True:
             # Generate GradCAM visualizations
             print("\n" + "=" * 70)
             print("GENERATING GRADCAM VISUALIZATIONS")
@@ -228,7 +283,9 @@ def main():
             except Exception as e:
                 print(f"[WARNING] GradCAM visualization failed: {e}")
 
-        models[name] = model
+        # Finalize wandb
+        if wandb_logger:
+            wandb.finish()
 
 if __name__ == '__main__':
     main()

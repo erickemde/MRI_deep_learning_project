@@ -94,3 +94,10 @@ Basic usage: "python gradcam_inference.py --config configs/baseline.yaml"
     - src/models/lit_agg
     - src/visualization/gradcam
     - src/experiments/config
+
+### Ablation Study
+Basic usage: "python ablation_study.py --config configs/ablation.yaml"
+- Same as "train_model.py", but will run all EXPERIMENTS (in src/experiments/config.py) if passed "experiment: ablation"
+- Additional features:
+    - "generate_gradcam: True" to generate GradCAM images for all models (False or omit to skip)
+    - "evaluate: best | last" to evaluate the best model checkpoints or final models against the test dataset ("no" or omit to skip)
