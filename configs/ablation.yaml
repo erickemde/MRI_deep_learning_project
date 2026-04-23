@@ -1,0 +1,14 @@
+# training arguments
+experiment: ablation
+epochs: 10
+batch_size: 64
+lr: 0.001
+num_workers: 8
+data_dir: data
+
+# gradcam arguments
+# checkpoint path only used for gradcam_inference.py
+generate_gradcam: False
+checkpoint_path: None
+total_examples: 3
+seed: 42
