@@ -1,9 +1,7 @@
 from huggingface_hub import HfApi
 from pathlib import Path
 import argparse
-import sys
 import tkinter as tk
-from tkinter import filedialog
 import src.experiments.config as cfg
 
 ORG_NAME = "gatech-deep-learning-project"
@@ -60,8 +58,6 @@ def check_hf_login():
         print("Please log into huggingface using 'hf auth login' in the command line with your api key")
         return False
         
-def get_file_path():
-    root = tk.Tk()
     
 if __name__=="__main__":
     hf_status = check_hf_login()
