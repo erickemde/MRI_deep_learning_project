@@ -30,7 +30,7 @@ def huggingface_upload_model(local_path):
         repo_id=repo_id,
         repo_type="model",
         exist_ok=True,
-        private=True
+        private=False
     )
 
     # upload file
