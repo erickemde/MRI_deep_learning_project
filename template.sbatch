@@ -8,6 +8,12 @@
 #SBATCH --mail-type=BEGIN,END,FAIL       # Mail preferences 
 #SBATCH --mail-user=YourEmail@gatech.edu # E-mail address for notifications
 
+# Redirect cache dirs to scratch so they don't fill home quota
+export WANDB_DIR=/home/hice1/YourUsername/scratch/wandb
+export WANDB_CACHE_DIR=/home/hice1/YourUsername/scratch/wandb_cache
+export PIP_CACHE_DIR=/home/hice1/YourUsername/scratch/pip_cache
+export TMPDIR=/home/hice1/YourUsername/scratch/tmp
+
 # Set working directory
 cd /home/hice1/YourUsername/scratch/deep_learning_project
 
@@ -15,9 +21,5 @@ cd /home/hice1/YourUsername/scratch/deep_learning_project
 module load anaconda3
 module load cuda
 
-# Activate env
-source $(conda info --base)/etc/profile.d/conda.sh
-conda activate CS7643_deep_learning_project
-
 # Execute script
-python train_model.py --config configs/baseline.yaml
+/home/hice1/YourUsername/scratch/envs/CS7643_deep_learning_project/bin/python ablation_study.py --config configs/ablation.yaml
