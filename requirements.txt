@@ -16,3 +16,4 @@ scikit-learn
 opencv-python
 albumentations
 pytorch-lightning
+huggingface-hub
