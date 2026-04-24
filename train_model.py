@@ -18,7 +18,7 @@ torch.set_float32_matmul_precision('medium')
 
 
 def main():
-    
+    # verify if user is logged intto huggingface
     hf_status = check_hf_login()
     
     parser = argparse.ArgumentParser(description='Brain Tumor Classification')    
