@@ -2,25 +2,25 @@ GPU available: True (cuda), used: True
 TPU available: False, using: 0 TPU cores
 💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
 wandb: WARNING The anonymous setting has no effect and will be removed in a future version.
-wandb: WARNING `resume` will be ignored since W&B syncing is set to `offline`. Starting a new run with run id g4yuu5ay.
+wandb: WARNING `resume` will be ignored since W&B syncing is set to `offline`. Starting a new run with run id i06bniyw.
 wandb: Tracking run with wandb version 0.25.1
 wandb: W&B syncing is set to `offline` in this directory. Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.
-wandb: Run data is saved locally in wandb/offline-run-20260424_233025-g4yuu5ay
-/home/gtubt-lab1/miniconda3/envs/CS7643_deep_learning_project/lib/python3.11/site-packages/pytorch_lightning/callbacks/model_checkpoint.py:881: Checkpoint directory /home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_baseline_aug exists and is not empty.
+wandb: Run data is saved locally in wandb/offline-run-20260425_011137-i06bniyw
+/home/gtubt-lab1/miniconda3/envs/CS7643_deep_learning_project/lib/python3.11/site-packages/pytorch_lightning/callbacks/model_checkpoint.py:881: Checkpoint directory /home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_cbam_finetune_aug exists and is not empty.
 LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
 
   | Name      | Type               | Params | Mode  | FLOPs
 -----------------------------------------------------------------
-0 | model     | VGG19Baseline      | 139 M  | train | 0    
+0 | model     | VGG19CBAMAttention | 156 M  | train | 0    
 1 | loss_fn   | CrossEntropyLoss   | 0      | train | 0    
 2 | train_acc | MulticlassAccuracy | 0      | train | 0    
 3 | val_acc   | MulticlassAccuracy | 0      | train | 0    
 -----------------------------------------------------------------
-16.4 K    Trainable params
-139 M     Non-trainable params
-139 M     Total params
-558.391   Total estimated model params size (MB)
-69        Modules in train mode
+22.3 M    Trainable params
+134 M     Non-trainable params
+156 M     Total params
+626.237   Total estimated model params size (MB)
+86        Modules in train mode
 0         Modules in eval mode
 0         Total Flops
 /home/gtubt-lab1/miniconda3/envs/CS7643_deep_learning_project/lib/python3.11/site-packages/pytorch_lightning/utilities/_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
@@ -31,9 +31,9 @@ LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
 [INFO] No attention (Baseline)
 [INFO] Trainable params: 0.016M
 ======================================================================
-EXPERIMENT: baseline_aug
+EXPERIMENT: cbam_finetune_aug
 ======================================================================
-  Model Type: VGG19 Baseline + Aug
+  Model Type: VGG19 + CBAM Attention (Fine-tune) + Aug
   Augmentation: Enabled
   Training Mode: Feature Extraction (Frozen Backbone)
   Epochs: 30
@@ -67,10 +67,11 @@ EXPERIMENT: baseline_aug
   Val batches: 8
 
 [4/5] Creating model...
-[INFO] No attention (Baseline)
-[INFO] VGG19 frozen: 139.6M params
-[INFO] Trainable params: 0.016M
-	Model: VGG19 Baseline + Aug
+[INFO] Unfroze layers from index 40
+[INFO] Using CBAM Attention
+[INFO] VGG19 frozen: 134.2M params
+[INFO] Trainable params: 22.324M
+	Model: VGG19 + CBAM Attention (Fine-tune) + Aug
 
 [5/5] Setting up trainer...
 
@@ -80,20 +81,20 @@ TRAINING STARTED
 
 
 ======================================================================
-EXPERIMENT 'vgg19_baseline_aug' COMPLETED
-  Best Validation Accuracy: 0.8884
-  Checkpoint: /home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_baseline_aug/best-epoch=29-val_acc=0.8884.ckpt
+EXPERIMENT 'vgg19_cbam_finetune_aug' COMPLETED
+  Best Validation Accuracy: 0.9721
+  Checkpoint: /home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_cbam_finetune_aug/best-epoch=10-val_acc=0.9721.ckpt
 ======================================================================
 
 ======================================================================
 GENERATING GRADCAM VISUALIZATIONS
 ======================================================================
-Generating GradCAM Examples by Class:   0%|          | 0/4 [00:00<?, ?it/s]Generating GradCAM Examples by Class:  25%|██▌       | 1/4 [00:00<00:01,  2.75it/s]Generating GradCAM Examples by Class:  50%|█████     | 2/4 [00:00<00:00,  3.00it/s]Generating GradCAM Examples by Class:  75%|███████▌  | 3/4 [00:01<00:00,  2.83it/s]Generating GradCAM Examples by Class: 100%|██████████| 4/4 [00:01<00:00,  3.02it/s]Generating GradCAM Examples by Class: 100%|██████████| 4/4 [00:01<00:00,  2.96it/s]
-Generating Misclassified Examples:   0%|          | 0/3 [00:00<?, ?it/s]Generating Misclassified Examples:  33%|███▎      | 1/3 [00:00<00:00,  5.62it/s]Generating Misclassified Examples:  67%|██████▋   | 2/3 [00:00<00:00,  3.37it/s]Generating Misclassified Examples: 100%|██████████| 3/3 [00:00<00:00,  3.04it/s]Generating Misclassified Examples: 100%|██████████| 3/3 [00:00<00:00,  3.25it/s]
-Generating Confusion Matrix:   0%|          | 0/8 [00:00<?, ?it/s]Generating Confusion Matrix:  12%|█▎        | 1/8 [00:00<00:01,  5.60it/s]Generating Confusion Matrix:  25%|██▌       | 2/8 [00:00<00:01,  5.58it/s]Generating Confusion Matrix:  38%|███▊      | 3/8 [00:00<00:00,  5.59it/s]Generating Confusion Matrix:  50%|█████     | 4/8 [00:00<00:00,  5.58it/s]Generating Confusion Matrix:  62%|██████▎   | 5/8 [00:00<00:00,  5.80it/s]Generating Confusion Matrix:  75%|███████▌  | 6/8 [00:01<00:00,  5.84it/s]Generating Confusion Matrix:  88%|████████▊ | 7/8 [00:01<00:00,  5.63it/s]Generating Confusion Matrix: 100%|██████████| 8/8 [00:01<00:00,  5.92it/s]Generating Confusion Matrix: 100%|██████████| 8/8 [00:01<00:00,  5.77it/s]
+Generating GradCAM Examples by Class:   0%|          | 0/4 [00:00<?, ?it/s]Generating GradCAM Examples by Class:  25%|██▌       | 1/4 [00:00<00:00,  3.05it/s]Generating GradCAM Examples by Class:  50%|█████     | 2/4 [00:00<00:00,  2.83it/s]Generating GradCAM Examples by Class:  75%|███████▌  | 3/4 [00:00<00:00,  3.25it/s]Generating GradCAM Examples by Class: 100%|██████████| 4/4 [00:01<00:00,  3.22it/s]Generating GradCAM Examples by Class: 100%|██████████| 4/4 [00:01<00:00,  3.15it/s]
+Generating Misclassified Examples:   0%|          | 0/3 [00:00<?, ?it/s]Generating Misclassified Examples:  33%|███▎      | 1/3 [00:00<00:00,  5.42it/s]Generating Misclassified Examples:  67%|██████▋   | 2/3 [00:00<00:00,  2.20it/s]Generating Misclassified Examples: 100%|██████████| 3/3 [00:01<00:00,  2.96it/s]Generating Misclassified Examples: 100%|██████████| 3/3 [00:01<00:00,  2.92it/s]
+Generating Confusion Matrix:   0%|          | 0/8 [00:00<?, ?it/s]Generating Confusion Matrix:  12%|█▎        | 1/8 [00:00<00:01,  5.62it/s]Generating Confusion Matrix:  25%|██▌       | 2/8 [00:00<00:01,  5.62it/s]Generating Confusion Matrix:  38%|███▊      | 3/8 [00:00<00:00,  5.66it/s]Generating Confusion Matrix:  50%|█████     | 4/8 [00:00<00:00,  5.66it/s]Generating Confusion Matrix:  62%|██████▎   | 5/8 [00:00<00:00,  5.83it/s]Generating Confusion Matrix:  75%|███████▌  | 6/8 [00:01<00:00,  5.85it/s]Generating Confusion Matrix:  88%|████████▊ | 7/8 [00:01<00:00,  5.69it/s]Generating Confusion Matrix: 100%|██████████| 8/8 [00:01<00:00,  5.95it/s]Generating Confusion Matrix: 100%|██████████| 8/8 [00:01<00:00,  5.81it/s]
 ======================================================================
 
-GradCAM visualizations saved to: gradcam_examples/vgg19_baseline_aug/best-epoch=29-val_acc=0.8884
+GradCAM visualizations saved to: gradcam_examples/vgg19_cbam_finetune_aug/best-epoch=10-val_acc=0.9721
 [1;34mwandb[0m: 
 [1;34mwandb[0m: You can sync this run to the cloud by running:
-[1;34mwandb[0m: [1mwandb sync wandb/offline-run-20260424_233025-g4yuu5ay[0m
+[1;34mwandb[0m: [1mwandb sync wandb/offline-run-20260425_011137-i06bniyw[0m

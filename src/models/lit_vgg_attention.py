@@ -2,9 +2,9 @@ import torch
 import pytorch_lightning as pl
 from torch import nn, optim
 from torchmetrics import Accuracy
-from torch import nn
 
 from .vgg19_attention import VGG19Model
+
 
 class VGGLightningWrapper(pl.LightningModule):
     def __init__(self, model, lr=1e-3):
@@ -15,7 +15,7 @@ class VGGLightningWrapper(pl.LightningModule):
         self.lr = lr
         num_classes = model.num_classes
         self.train_acc = Accuracy(task="multiclass", num_classes=num_classes)
-        self.val_acc = Accuracy(task="multiclass", num_classes=num_classes)
+        self.val_acc   = Accuracy(task="multiclass", num_classes=num_classes)
 
     def forward(self, x):
         return self.model(x)
@@ -24,35 +24,27 @@ class VGGLightningWrapper(pl.LightningModule):
         x, y = batch
         logits = self(x)
         loss = self.loss_fn(logits, y)
-        
         preds = logits.argmax(dim=1)
         self.train_acc(preds, y)
-        
         self.log("train_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("train_acc", self.train_acc, on_step=False, on_epoch=True, prog_bar=True)
-        
+        self.log("train_acc",  self.train_acc, on_step=False, on_epoch=True, prog_bar=True)
         return loss
-    
+
     def validation_step(self, batch, batch_idx):
         x, y = batch
         logits = self(x)
         loss = self.loss_fn(logits, y)
-        
         preds = logits.argmax(dim=1)
         self.val_acc(preds, y)
-        
         self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val_acc", self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
-        
+        self.log("val_acc",  self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
         return loss
-    
+
     def configure_optimizers(self):
         optimizer = optim.Adam(self.parameters(), lr=self.hparams.lr)
-        
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(
             optimizer, mode='max', factor=0.5, patience=5
         )
-        
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
@@ -62,52 +54,47 @@ class VGGLightningWrapper(pl.LightningModule):
                 "frequency": 1
             }
         }
-    
+
     @property
     def gradcam_target_layer(self):
-        """Returns the target layer for GradCAM visualization"""
         return self.model.gradcam_target_layer
-    
+
 
 class VGG19Baseline(nn.Module):
     def __init__(self, num_classes=4, pretrained=True):
         super().__init__()
         self.num_classes = num_classes
-        
         self.model = VGG19Model(
             attention_type=None,
             num_classes=num_classes,
             pretrained=pretrained
         )
-    
+
     def forward(self, x):
         return self.model(x)
-    
+
     @property
     def gradcam_target_layer(self):
-        """Returns the target layer for GradCAM visualization"""
         return self.model.vgg.features[-4]
 
 
 class VGG19SEAttention(nn.Module):
-    def __init__(self, num_classes=4, reduction=16, pretrained=True):
+    def __init__(self, num_classes=4, reduction=16, pretrained=True, unfreeze_from_layer=None):
         super().__init__()
         self.num_classes = num_classes
-
-        
         self.model = VGG19Model(
             attention_type='se',
             num_classes=num_classes,
             pretrained=pretrained,
-            reduction_ratio=reduction
+            reduction_ratio=reduction,
+            unfreeze_from_layer=unfreeze_from_layer
         )
-    
+
     def forward(self, x):
         return self.model(x)
-    
+
     @property
     def gradcam_target_layer(self):
-        """Returns the target layer for GradCAM visualization"""
         return self.model.features[-4]
 
 
@@ -115,18 +102,54 @@ class VGG19SoftmaxAttention(nn.Module):
     def __init__(self, num_classes=4, pretrained=True, unfreeze_from_layer=None):
         super().__init__()
         self.num_classes = num_classes
-        
         self.model = VGG19Model(
             attention_type='softmax',
             num_classes=num_classes,
             pretrained=pretrained,
             unfreeze_from_layer=unfreeze_from_layer
         )
-    
+
     def forward(self, x):
         return self.model(x)
-    
+
     @property
     def gradcam_target_layer(self):
-        """Returns the target layer for GradCAM visualization"""
+        return self.model.features[-4]
+
+
+class VGG19CBAMAttention(nn.Module):
+    def __init__(self, num_classes=4, pretrained=True, unfreeze_from_layer=None):
+        super().__init__()
+        self.num_classes = num_classes
+        self.model = VGG19Model(
+            attention_type='cbam',
+            num_classes=num_classes,
+            pretrained=pretrained,
+            unfreeze_from_layer=unfreeze_from_layer
+        )
+
+    def forward(self, x):
+        return self.model(x)
+
+    @property
+    def gradcam_target_layer(self):
+        return self.model.features[-4]
+
+
+class VGG19SelfAttention(nn.Module):
+    def __init__(self, num_classes=4, pretrained=True, unfreeze_from_layer=None):
+        super().__init__()
+        self.num_classes = num_classes
+        self.model = VGG19Model(
+            attention_type='self',
+            num_classes=num_classes,
+            pretrained=pretrained,
+            unfreeze_from_layer=unfreeze_from_layer
+        )
+
+    def forward(self, x):
+        return self.model(x)
+
+    @property
+    def gradcam_target_layer(self):
         return self.model.features[-4]
