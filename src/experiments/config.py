@@ -14,7 +14,14 @@ EXPERIMENTS = {
         "vgg19_softmax_attention", "VGG19 + Softmax Attention (Frozen)", False, VGG19SoftmaxAttention, {}
     ),
     "softmax_attention_finetune": (
-        "vgg19_softmax_attention_finetune", "VGG19 + Softmax Attention (Partial Fine-tune)", False, VGG19SoftmaxAttention, {"unfreeze_from_layer", 35}
+        "vgg19_softmax_attention_finetune", "VGG19 + Softmax Attention (Partial Fine-tune)", False, VGG19SoftmaxAttention, {"unfreeze_from_layer": 35}
+    ),
+    "softmax_attention_finetune_aug": (
+        "vgg19_softmax_attention_finetune_aug",
+        "VGG19 + Softmax Attention (Partial Fine-tune)",
+        True,
+        VGG19SoftmaxAttention,
+        {"unfreeze_from_layer": 40}
     ),
     "se_attention": (
         "vgg19_se_attention", "VGG19 + SE Attention", False, VGG19SEAttention, {"reduction": 16}
