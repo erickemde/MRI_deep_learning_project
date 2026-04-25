@@ -50,7 +50,8 @@ def check_hf_login():
     try:
         api = HfApi()
         user_info = api.whoami()
-        print(f"[HUGGINGFACE] Logged in as: {user_info["name"]}")
+        print(f"[HUGGINGFACE] Logged in as: {user_info['name']}")
+
         return True
     except Exception:
         print("NOT LOGGED IN TO HUGGINGFACE")
