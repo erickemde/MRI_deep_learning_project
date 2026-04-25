@@ -25,4 +25,5 @@ dependencies:
       - albumentations
       - opencv-python
       - scikit-learn
+      - huggingface_hub
 

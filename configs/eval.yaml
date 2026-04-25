@@ -1,0 +1,14 @@
+## data arguments
+experiment: eval
+batch_size: 64
+num_workers: 8
+data_dir: data
+
+## huggingface models to evaluate
+repo_id: gatech-deep-learning-project
+# cache_dir: .cache/huggingface/ (optional)
+models:
+  vgg19_baseline: # name on huggingface
+    ckpt_path: best-epoch=00-val_acc=0.8367.ckpt # path on huggingface
+    # reduction: int (optional)
+    # attention_type: se | softmax | None (optional)

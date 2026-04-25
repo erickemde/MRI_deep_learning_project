@@ -2,17 +2,24 @@
 *.csv
 *.tsv
 *.jpg
+
+# large dataset files
 /data/
 /data_raw/
-wandb
+
+# gradcam generation
 /gradcam_examples/
-logs/*/
 
 # Large model files
 checkpoints/
 
-# PyTorch Lightning logs
+# model experimentation
+model_testing.ipynb
+
+# PyTorch Lightning and wandb logs
 lightning_logs/
+wandb
+logs/*/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

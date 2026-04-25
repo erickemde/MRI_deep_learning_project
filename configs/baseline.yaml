@@ -1,0 +1,14 @@
+# training arguments
+experiment: baseline
+epochs: 30
+batch_size: 64
+lr: 0.001
+num_workers: 0
+data_dir: data
+
+# gradcam arguments
+# checkpoint path only used for gradcam_inference.py
+generate_gradcam: True
+model_checkpoint_path: checkpoints/vgg19_baseline/best-epoch=00-val_acc=0.8207.ckpt
+total_examples: 3
+seed: 42
