@@ -20,6 +20,14 @@ Project Repo for CS7643 (Deep Learning)
     - In remote terminal: "mkdir -p ~/.kaggle"
     - In local terminal: "scp C:\Users\YourName\.kaggle\kaggle.json YourEmail@login-ice.pace.gatech.edu:~/.kaggle/kaggle.json"
     - Update permissions in remote terminal: "chmod 600 ~/.kaggle/kaggle.json"
+6. Weights and Biases API
+    - Create an account at [W&B](wandb.ai)
+    - In User Settings, create an API key
+    - In ICE-PACE, enter command "wandb login" and paste API key
+7. Slurm batch file
+    - Create an sbatch file using "template.sbatch". Here is a helpful resource [Using Slurm on ICE](https://gatech.service-now.com/home?id=kb_article_view&sysparm_article=KB0042096)
+    - Create an output directory if needed (e.g. /slurm_out/)
+    - Execute "sbatch YourFilename.sbatch"
 
 ## Data Setup
 1. Create an environment with required packages
@@ -86,3 +94,10 @@ Basic usage: "python gradcam_inference.py --config configs/baseline.yaml"
     - src/models/lit_agg
     - src/visualization/gradcam
     - src/experiments/config
+
+### Ablation Study
+Basic usage: "python ablation_study.py --config configs/ablation.yaml"
+- Same as "train_model.py", but will run all EXPERIMENTS (in src/experiments/config.py) if passed "experiment: ablation"
+- Additional features:
+    - "generate_gradcam: True" to generate GradCAM images for all models (False or omit to skip)
+    - "evaluate: best | last" to evaluate the best model checkpoints or final models against the test dataset ("no" or omit to skip)

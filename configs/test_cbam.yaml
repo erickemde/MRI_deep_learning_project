@@ -1,0 +1,10 @@
+experiment: cbam
+epochs: 1
+batch_size: 4
+lr: 0.001
+num_workers: 0
+data_dir: data
+generate_gradcam: False
+checkpoint_path: None
+total_examples: 3
+seed: 42

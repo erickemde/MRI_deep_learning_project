@@ -1,4 +1,11 @@
-from src.models.lit_vgg_attention import *
+from src.models.LightningWrapper import LightningWrapper
+from src.models.vgg19 import (
+    VGG19Baseline, 
+    VGG19SEAttention, 
+    VGG19SoftmaxAttention,
+    VGG19CBAMAttention,
+    VGG19SelfAttention
+)
 
 EXPERIMENTS = {
     # ── Baseline ──────────────────────────────────────────────────────────────
@@ -14,13 +21,17 @@ EXPERIMENTS = {
         "vgg19_softmax_attention", "VGG19 + Softmax Attention (Frozen)", False, VGG19SoftmaxAttention, {}
     ),
     "softmax_attention_aug": (
-        "vgg19_softmax_attention_aug", "VGG19 + Softmax Attention + Aug", True, VGG19SoftmaxAttention, {}
+    "vgg19_softmax_attention_aug", "VGG19 + Softmax Attention + Aug", True, VGG19SoftmaxAttention, {}
     ),
     "softmax_attention_finetune": (
-        "vgg19_softmax_attention_finetune", "VGG19 + Softmax Attention (Fine-tune)", False, VGG19SoftmaxAttention, {"unfreeze_from_layer": 40}
+        "vgg19_softmax_attention_finetune", "VGG19 + Softmax Attention (Partial Fine-tune)", False, VGG19SoftmaxAttention, {"unfreeze_from_layer": 35}
     ),
     "softmax_attention_finetune_aug": (
-        "vgg19_softmax_attention_finetune_aug", "VGG19 + Softmax Attention (Fine-tune) + Aug", True, VGG19SoftmaxAttention, {"unfreeze_from_layer": 40}
+        "vgg19_softmax_attention_finetune_aug",
+        "VGG19 + Softmax Attention (Partial Fine-tune) + Aug",
+        True,
+        VGG19SoftmaxAttention,
+        {"unfreeze_from_layer": 40}
     ),
 
     # ── SE Attention ──────────────────────────────────────────────────────────
@@ -90,4 +101,26 @@ def setup_experiment(config):
 def build_model(config):
     model = config["model_class"](pretrained=True, **config["model_kwargs"])
     print("\tModel:", config["model_description"])
-    return VGGLightningWrapper(model, lr=config["lr"])
+    return LightningWrapper(model, lr=config["lr"])
+
+
+def setup_ablation_study(config):
+    '''
+    Create a dictionary of configs for each experiment in EXPERIMENTS, using shared hyperparameters from the config file
+    '''
+    experiment_dict = {}
+    for experiment, args in EXPERIMENTS.items():
+        experiment_name, model_description, use_augmentation, model_class, model_kwargs = args
+
+        experiment_dict[experiment] = {
+            **config,
+            "experiment_name": experiment_name,
+            "model_description": model_description,
+            "use_augmentation": use_augmentation,
+            "model_class": model_class,
+            "model_kwargs": model_kwargs,
+            "checkpoint_dir": f"checkpoints/{experiment_name}",
+            "gradcam_dir": f"gradcam_examples/{experiment_name}"
+        }
+    
+    return experiment_dict

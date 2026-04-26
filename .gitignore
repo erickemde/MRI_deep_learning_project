@@ -13,6 +13,9 @@
 # Large model files
 checkpoints/
 
+# model experimentation
+model_testing.ipynb
+
 # PyTorch Lightning and wandb logs
 lightning_logs/
 wandb

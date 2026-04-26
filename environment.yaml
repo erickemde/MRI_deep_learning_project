@@ -24,4 +24,6 @@ dependencies:
       - seaborn
       - albumentations
       - opencv-python
+      - scikit-learn
+      - huggingface_hub
 
