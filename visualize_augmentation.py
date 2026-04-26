@@ -37,10 +37,7 @@ def get_augmentation_variants():
         v2.ToImage(),
         v2.ToDtype(torch.float32, scale=True),
         v2.RandomHorizontalFlip(p=0.5),
-        v2.RandomRotation(degrees=15, interpolation=v2.InterpolationMode.BILINEAR),
-        v2.ElasticTransform(alpha=50.0, sigma=5.0, interpolation=v2.InterpolationMode.BILINEAR, fill=0),
-        v2.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1, hue=0.05),
-        v2.GaussianNoise(mean=0.0, sigma=0.1, clip=True),
+        v2.RandomAffine(degrees=10, translate=(0.05, 0.05), scale=(0.95, 1.05), interpolation=v2.InterpolationMode.BILINEAR ),
         v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
     
@@ -71,10 +68,7 @@ def visualize_augmentation_examples(data_dir='data', num_samples=5, save_path='a
         v2.ToImage(),
         v2.ToDtype(torch.float32, scale=True),
         v2.RandomHorizontalFlip(p=0.5),
-        v2.RandomRotation(degrees=15, interpolation=v2.InterpolationMode.BILINEAR),
-        v2.ElasticTransform(alpha=50.0, sigma=5.0, interpolation=v2.InterpolationMode.BILINEAR, fill=0),
-        v2.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1, hue=0.05),
-        v2.GaussianNoise(mean=0.0, sigma=0.1, clip=True),
+        v2.RandomAffine(degrees=10, translate=(0.05, 0.05), scale=(0.95, 1.05), interpolation=v2.InterpolationMode.BILINEAR ),
         v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
     
