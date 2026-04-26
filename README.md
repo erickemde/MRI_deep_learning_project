@@ -61,9 +61,7 @@ Basic usage: "python train_model.py --config configs/baseline.yaml"
         - Augmentation (details in src/data/augmentation.py) uses torchvision.transforms.v2.Compose with transformations (if use_augmentation=True):
             - Resize to 224x224
             - RandomHorizontalFlip
-            - RandomRotation
             - RandomAffine
-            - ColorJitter
             - Normalize
     - Builds model by calling lit_vgg_attention.VGGLightningWrapper
         - Cross-entropy loss
