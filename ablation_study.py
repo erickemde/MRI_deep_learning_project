@@ -14,6 +14,7 @@ from src.experiments.config import setup_experiment, build_model, setup_ablation
 import yaml
 from pathlib import Path
 import wandb
+from src.models.LightningWrapper import LightningWrapper
 
 torch.set_float32_matmul_precision('medium')
 
@@ -249,7 +250,7 @@ def main():
         # Evaluate final model
         test_acc = 0.
         if config['evaluate']=='best':
-            best_model = VGGLightningWrapper.load_from_checkpoint(checkpoint_callback.best_model_path, model=model.model)
+            best_model = LightningWrapper.load_from_checkpoint(checkpoint_callback.best_model_path, model=model.model)
             test_acc = _evaluate(best_model, test_loader)
         elif config['evaluate']=='last':
             test_acc = _evaluate(model, test_loader)

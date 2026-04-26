@@ -5,7 +5,7 @@ batch_size: 64
 lr: 0.001
 num_workers: 8
 data_dir: data
-evaluate: best # 'no' | 'best' | 'last'
+evaluate: no # 'no' | 'best' | 'last'
 
 # gradcam arguments
 # checkpoint path only used for gradcam_inference.py

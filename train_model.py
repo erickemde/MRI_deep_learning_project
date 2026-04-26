@@ -18,7 +18,7 @@ torch.set_float32_matmul_precision('medium')
 
 
 def main():
-    # verify if user is logged intto huggingface
+    # verify if user is logged into huggingface
     hf_status = check_hf_login()
     
     parser = argparse.ArgumentParser(description='Brain Tumor Classification')    
@@ -27,16 +27,16 @@ def main():
     args = parser.parse_args()
     with open(args.config) as f:
         config = yaml.safe_load(f)
-        
+
     config = setup_experiment(config)
-    use_augmentation = config["use_augmentation"]
-    model_type = config["model_description"]
-    experiment_name = config["experiment_name"]
+    use_augmentation = config['use_augmentation']
+    model_type = config['model_description']
+    experiment_name = config['experiment_name']
 
     print("=" * 70)
     print(f"EXPERIMENT: {config['experiment']}")
     print("=" * 70)
-    
+
     print(f"  Model Type: {model_type}")
     print(f"  Augmentation: {'Enabled' if use_augmentation else 'Disabled'}")
     print(f"  Training Mode: Feature Extraction (Frozen Backbone)")
@@ -44,74 +44,72 @@ def main():
     print(f"  Batch Size: {config['batch_size']}")
     print(f"  Learning Rate: {config['lr']}")
     print("=" * 70)
-    
+
     print("\n[1/5] Loading datasets...")
-    
+
     train_paths, train_labels = load_dataset_from_directory(
-        data_dir=config["data_dir"],
+        data_dir=config['data_dir'],
         split='train'
     )
-    
+
     val_paths, val_labels = load_dataset_from_directory(
-        data_dir=config["data_dir"],
+        data_dir=config['data_dir'],
         split='val'
     )
-    
+
     print("\n[2/5] Creating transforms...")
-    
+
     if use_augmentation:
         print("  Augmentation enabled:")
         print("     - RandomHorizontalFlip")
-        print("     - RandomRotation")
         print("     - RandomAffine")
-        print("     - ColorJitter")
     else:
         print("  No augmentation")
-    
+
     train_transform = get_train_transforms(use_augmentation=use_augmentation)
     val_transform = get_val_transforms()
-    
+
     print("\n[3/5] Creating datasets...")
-    
+
     train_dataset = BrainTumorDataset(
         image_paths=train_paths,
         labels=train_labels,
         transform=train_transform
     )
-    
+
     val_dataset = BrainTumorDataset(
         image_paths=val_paths,
         labels=val_labels,
         transform=val_transform
     )
-    
+
     train_loader = DataLoader(
         train_dataset,
-        batch_size=config["batch_size"],
+        batch_size=config['batch_size'],
         shuffle=True,
-        num_workers=config["num_workers"],
+        num_workers=config['num_workers'],
         pin_memory=True
     )
-    
+
     val_loader = DataLoader(
         val_dataset,
-        batch_size=config["batch_size"],
+        batch_size=config['batch_size'],
         shuffle=False,
-        num_workers=config["num_workers"],
+        num_workers=config['num_workers'],
         pin_memory=True
     )
-    
+
     print(f"  Train batches: {len(train_loader)}")
     print(f"  Val batches: {len(val_loader)}")
-    
+
     print("\n[4/5] Creating model...")
-    
+
     model = build_model(config)
-    
+
     print("\n[5/5] Setting up trainer...")
-    
+
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
-        dirpath=os.path.join(config["checkpoint_dir"]),
+        dirpath=os.path.join(config['checkpoint_dir']),
         filename='best-{epoch:02d}-{val_acc:.4f}',
         monitor='val_acc',
         mode='max',
@@ -119,38 +117,37 @@ def main():
     )
 
     lr_callback = pl.callbacks.LearningRateMonitor(logging_interval="step")
-    
-    # create loggers
+
     tb_logger = TensorBoardLogger(save_dir="logs/", name="my_model")
     loggers = [tb_logger]
     try:
-        wandb_logger = WandbLogger(project = "deep_learning_project", log_model="all")
+        wandb_logger = WandbLogger(project="deep_learning_project", log_model="all")
         loggers.append(wandb_logger)
     except Exception:
         print("Wandb not available, logging to Tensorboard only.")
 
     trainer = pl.Trainer(
-        max_epochs=config["epochs"],
+        max_epochs=config['epochs'],
         accelerator='auto',
         devices=1,
         callbacks=[checkpoint_callback, lr_callback],
         logger=loggers,
-        enable_progress_bar=True,
+        enable_progress_bar=False,
     )
-    
+
     print("\n" + "=" * 70)
     print("TRAINING STARTED")
     print("=" * 70 + "\n")
-    
+
     trainer.fit(model, train_loader, val_loader)
-    
+
     print("\n" + "=" * 70)
     print(f"EXPERIMENT '{experiment_name}' COMPLETED")
     print(f"  Best Validation Accuracy: {checkpoint_callback.best_model_score:.4f}")
     print(f"  Checkpoint: {checkpoint_callback.best_model_path}")
     print("=" * 70)
     
-    if config['generate_gradcam']:
+    if config.get('generate_gradcam', True):
         # Generate GradCAM visualizations
         print("\n" + "=" * 70)
         print("GENERATING GRADCAM VISUALIZATIONS")
@@ -178,5 +175,6 @@ def main():
         
         huggingface_upload_model(checkpoint_callback.best_model_path)
     
+
 if __name__ == '__main__':
     main()

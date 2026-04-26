@@ -1,4 +1,3 @@
-# src/data/augmentation.py
 
 import torch
 from torchvision.transforms import v2
@@ -10,7 +9,7 @@ def get_train_transforms(use_augmentation=True):
             v2.Resize((224, 224), antialias=True),
             v2.ToImage(),
             v2.ToDtype(torch.float32, scale=True),
-            
+
             v2.RandomHorizontalFlip(p=0.5),
             # v2.RandomRotation(
             #     degrees=10,  # 15 → 10
