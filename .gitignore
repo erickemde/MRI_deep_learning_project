@@ -2,6 +2,8 @@
 *.csv
 *.tsv
 *.jpg
+.claude
+.vscode
 
 # large dataset files
 /data/
