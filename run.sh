@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Clean old checkpoints
+echo "Cleaning old checkpoints..."
+rm -rf checkpoints/
+mkdir -p checkpoints
+echo "Done."
+
 export WANDB_MODE=offline
 mkdir -p logs
 

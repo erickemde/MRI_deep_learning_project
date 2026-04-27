@@ -18,17 +18,18 @@ torch.set_float32_matmul_precision('medium')
 
 
 def main():
-    # verify if user is logged into huggingface
     hf_status = check_hf_login()
-    
-    parser = argparse.ArgumentParser(description='Brain Tumor Classification')    
-    
+
+    parser = argparse.ArgumentParser(description='Brain Tumor Classification')
     parser.add_argument("--config", type=str, required=True)
     args = parser.parse_args()
     with open(args.config) as f:
         config = yaml.safe_load(f)
 
     config = setup_experiment(config)
+
+    pl.seed_everything(config['seed'], workers=True)
+
     use_augmentation = config['use_augmentation']
     model_type = config['model_description']
     experiment_name = config['experiment_name']
@@ -36,13 +37,13 @@ def main():
     print("=" * 70)
     print(f"EXPERIMENT: {config['experiment']}")
     print("=" * 70)
-
     print(f"  Model Type: {model_type}")
     print(f"  Augmentation: {'Enabled' if use_augmentation else 'Disabled'}")
     print(f"  Training Mode: Feature Extraction (Frozen Backbone)")
     print(f"  Epochs: {config['epochs']}")
     print(f"  Batch Size: {config['batch_size']}")
     print(f"  Learning Rate: {config['lr']}")
+    print(f"  Seed: {config['seed']}")
     print("=" * 70)
 
     print("\n[1/5] Loading datasets...")
@@ -88,7 +89,8 @@ def main():
         batch_size=config['batch_size'],
         shuffle=True,
         num_workers=config['num_workers'],
-        pin_memory=True
+        pin_memory=True,
+        worker_init_fn=lambda _: None,
     )
 
     val_loader = DataLoader(
@@ -96,7 +98,7 @@ def main():
         batch_size=config['batch_size'],
         shuffle=False,
         num_workers=config['num_workers'],
-        pin_memory=True
+        pin_memory=True,
     )
 
     print(f"  Train batches: {len(train_loader)}")
@@ -133,6 +135,7 @@ def main():
         callbacks=[checkpoint_callback, lr_callback],
         logger=loggers,
         enable_progress_bar=False,
+        deterministic="warn",
     )
 
     print("\n" + "=" * 70)
@@ -146,13 +149,12 @@ def main():
     print(f"  Best Validation Accuracy: {checkpoint_callback.best_model_score:.4f}")
     print(f"  Checkpoint: {checkpoint_callback.best_model_path}")
     print("=" * 70)
-    
+
     if config.get('generate_gradcam', True):
-        # Generate GradCAM visualizations
         print("\n" + "=" * 70)
         print("GENERATING GRADCAM VISUALIZATIONS")
         print("=" * 70)
-        
+
         try:
             checkpoint_stem = Path(checkpoint_callback.best_model_path).stem
             gradcam_save_dir = os.path.join("gradcam_examples", experiment_name, checkpoint_stem)
@@ -167,14 +169,13 @@ def main():
         except Exception as e:
             print(f"[WARNING] GradCAM visualization failed: {e}")
 
-    # Save to huggingface if user is signed in
     if hf_status:
         print("\n" + "=" * 70)
         print("SAVING TO HUGGINGFACE")
         print("=" * 70)
-        
+
         huggingface_upload_model(checkpoint_callback.best_model_path)
-    
+
 
 if __name__ == '__main__':
     main()
