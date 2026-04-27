@@ -52,9 +52,7 @@ def _load_augment_data(config, augment):
     if augment:
         print("  Augmentation enabled:")
         print("     - RandomHorizontalFlip")
-        print("     - RandomRotation")
         print("     - RandomAffine")
-        print("     - ColorJitter")
     else:
         print("  No augmentation")
 

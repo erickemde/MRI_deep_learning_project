@@ -120,7 +120,7 @@ def main():
 
     lr_callback = pl.callbacks.LearningRateMonitor(logging_interval="step")
 
-    tb_logger = TensorBoardLogger(save_dir="logs/", name="my_model")
+    tb_logger = TensorBoardLogger(save_dir="logs/", name=experiment_name)
     loggers = [tb_logger]
     try:
         wandb_logger = WandbLogger(project="deep_learning_project", log_model="all")
