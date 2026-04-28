@@ -10,22 +10,29 @@ import torchvision.models as t_models
 from lightning.pytorch.loggers import TensorBoardLogger, WandbLogger
 import pytorch_lightning as pl
 import os
+import sys
 from lightning.pytorch.callbacks import ModelCheckpoint, LearningRateMonitor
 from src.models.LightningWrapper import LightningWrapper
+from huggingface_upload import huggingface_upload_model, check_hf_login
 
 torch.set_float32_matmul_precision('medium')
 
 CONFIG = {
+    'train_model': True,
     'data_dir': 'data',
     'batch_size': 64,
     'num_workers': 1,
     'checkpoint_dir': 'checkpoint',
     'experiment_name': 'resnet_aug_cbam4_conv',
     'epochs': 10,
+    'lr': 5e-4,
+    'weight_decay': 1e-4,
     'use_augmentation': True, # True | False
+    'tune_layer4': False,
     'cbam_layer3': False, # True | False : add CBAM after layer3?
     'cbam_layer4': True, # True | False : add CBAM after layer4?
-    'attention': 'conv' # conv | self : spatial attention type
+    'attention': 'conv', # conv | self : spatial attention type
+    'hf_upload': True,
 }
 
 # Load train and valid data
@@ -204,7 +211,7 @@ class CBAM(nn.Module):
         a = self.spatial_attn(a)
         return x + a # residual skip connection
     
-def build_model(cbam_layer3 = False, cbam_layer4 = False, attention = 'conv', num_classes=4):
+def build_model(tune_layer4 = False, cbam_layer3 = False, cbam_layer4 = False, attention = 'conv', num_classes=4):
     # Init model
     model = t_models.resnet34(weights=t_models.ResNet34_Weights.DEFAULT)
     
@@ -214,19 +221,25 @@ def build_model(cbam_layer3 = False, cbam_layer4 = False, attention = 'conv', nu
 
     # Insert CBAM
     if cbam_layer3:
-        model.layer3 = nn.Sequential(
-            model.layer3,
-            CBAM(in_channels=256, attention=attention)
+        model.layer4 = nn.Sequential(
+            CBAM(in_channels=256, attention=attention), # this is unfrozen
+            model.layer4
         )
-        # unfreeze layer 4
-        for param in model.layer4.parameters():
-            param.requires_grad = True
+        print(f"Inserted CBAM {attention}-attention before layer4...")
 
     if cbam_layer4:
         model.layer4 = nn.Sequential(
-            model.layer4,
-            CBAM(in_channels=512, attention=attention)
+            model.layer4, # this stays frozen
+            CBAM(in_channels=512, attention=attention) # this is unfrozen
         )
+        print(f"Inserted CBAM {attention}-attention after layer4...")
+
+    print(f"Tune layer4? {tune_layer4}.")
+    if tune_layer4:
+        # unfreeze layer 4
+        print("Unfreezing layer4...")
+        for param in model.layer4.parameters():
+            param.requires_grad = True
 
     # Add classifier
     model.fc = nn.Linear(in_features=512, out_features=num_classes)
@@ -234,7 +247,17 @@ def build_model(cbam_layer3 = False, cbam_layer4 = False, attention = 'conv', nu
     model.num_classes = num_classes
 
     # View model architecture
-    print(model)    
+    print(model)
+
+    # Count parameters
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    total_params = sum(p.numel() for p in model.parameters())
+    layer3_trainable = sum(p.numel() for p in model.layer3.parameters() if p.requires_grad)
+    layer4_trainable = sum(p.numel() for p in model.layer4.parameters() if p.requires_grad)
+    layer4_total = sum(p.numel() for p in model.layer4.parameters())
+    print(f"Total params: {total_params:,}; trainable params: {trainable_params:,}; ratio: {trainable_params/total_params:.4f}")
+    print(f"- layer3 trainable params: {layer3_trainable:,}")
+    print(f"- layer4 total params: {layer4_total:,}; trainable params: {layer4_trainable:,}; ratio: {layer4_trainable/layer4_total:.4f}")
 
     return model
 
@@ -277,20 +300,28 @@ def _trainer_setup(config):
 
 # Train model
 def main():
+    wandb.finish()
+    pl.seed_everything(42, workers=True)
+
     # Load data
     train_loader, val_loader, train_aug_loader, test_loader = _load_augment_data(CONFIG, augment=CONFIG['use_augmentation'])
 
     # Build model
     print("\n[4/5] Creating model...")
-    model = build_model(cbam_layer3=CONFIG['cbam_layer3'], cbam_layer4=CONFIG['cbam_layer4'], attention=CONFIG['attention'])
-    lightning_model = LightningWrapper(model)
+    model = build_model(tune_layer4=CONFIG['tune_layer4'], cbam_layer3=CONFIG['cbam_layer3'], cbam_layer4=CONFIG['cbam_layer4'], attention=CONFIG['attention'])
+    lightning_model = LightningWrapper(model, lr=CONFIG['lr'], weight_decay=CONFIG['weight_decay'])
+
+    # Continue with training?
+    if not CONFIG['train_model']:
+        print(f"'train_model' = {CONFIG['train_model']}. Exiting...")
+        sys.exit(0)
 
     # Set up trainer and loggers
     print("\n[5/5] Setting up trainer...")
     trainer, checkpoint_callback = _trainer_setup(CONFIG)
 
     print("\n" + "=" * 70)
-    print(f"TRAINING STARTED: Experiment {CONFIG['experiment_name']}]")
+    print(f"TRAINING STARTED: Experiment {CONFIG['experiment_name']}")
     print("=" * 70 + "\n")
 
     # Train model
@@ -306,6 +337,14 @@ def main():
     print("=" * 70)
 
     wandb.finish()
+
+    hf_status = check_hf_login()
+    if hf_status and CONFIG['hf_upload']:
+        print("\n" + "=" * 70)
+        print("SAVING TO HUGGINGFACE")
+        print("=" * 70)
+
+        huggingface_upload_model(checkpoint_callback.best_model_path)
 
 if __name__ == '__main__':
     main()
