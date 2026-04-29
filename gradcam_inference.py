@@ -22,6 +22,8 @@ def main():
         config = yaml.safe_load(f)
     
     config = setup_experiment(config)
+    pl.seed_everything(config['seed'], workers=True)
+
     experiment_name = config["experiment_name"]
     model_type = config["model_description"]
     experiment_name = config["experiment_name"]
@@ -37,11 +39,6 @@ def main():
     
         
     print("\n[1/4] Loading datasets...")
-    
-    train_paths, train_labels = load_dataset_from_directory(
-        data_dir=config["data_dir"],
-        split='train'
-    )
     
     val_paths, val_labels = load_dataset_from_directory(
         data_dir=config["data_dir"],
