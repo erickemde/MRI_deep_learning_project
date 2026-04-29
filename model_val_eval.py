@@ -8,7 +8,7 @@ from src.data.dataset import BrainTumorDataset, load_dataset_from_directory
 from src.data.augmentation import get_val_transforms
 import yaml
 from src.models.LightningWrapper import LightningWrapper
-from src.models.vgg19 import VGG19Baseline, VGG19SEAttention, VGG19SoftmaxAttention, VGG19CBAMAttention, VGG19SelfAttention
+from src.models.vgg19 import VGG19Baseline, VGG19SEAttention, VGG19SoftmaxAttention, VGG19CBAMAttention, VGG19SelfAttention, VGG19LoRA
 
 torch.set_float32_matmul_precision('medium')
 
@@ -67,8 +67,8 @@ def _get_model_backbone(args):
     args.setdefault('reduction', 16)
     args.setdefault('attention_type', None)
     attention = args['attention_type']
-    assert attention in ['softmax', 'se', 'cbam', 'self', None], \
-        f"Attention: {attention} not in ['softmax', 'se', 'cbam', 'self', None]"
+    assert attention in ['softmax', 'se', 'cbam', 'self', 'lora', None], \
+        f"Attention: {attention} not in ['softmax', 'se', 'cbam', 'self', 'lora', None]"
 
     if attention == 'softmax':
         return VGG19SoftmaxAttention()
@@ -78,6 +78,8 @@ def _get_model_backbone(args):
         return VGG19CBAMAttention()
     elif attention == 'self':
         return VGG19SelfAttention()
+    elif attention == 'lora':
+        return VGG19LoRA(rank=args.get('rank', 8))
     else:
         return VGG19Baseline()
 

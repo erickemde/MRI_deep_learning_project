@@ -26,3 +26,8 @@ models:
   vgg19_cbam_finetune:
     ckpt_path: best-epoch=04-val_acc=0.9821.ckpt
     attention_type: cbam
+  vgg19_lora:
+    ckpt_path: best-epoch=16-val_acc=0.9641.ckpt
+    attention_type: lora
+    rank: 8
+

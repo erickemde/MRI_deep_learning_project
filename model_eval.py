@@ -11,7 +11,7 @@ from src.data.dataset import BrainTumorDataset, load_dataset_from_directory
 from src.data.augmentation import get_val_transforms
 import yaml
 from src.models.LightningWrapper import LightningWrapper
-from src.models.vgg19 import VGG19Baseline, VGG19SEAttention, VGG19SoftmaxAttention, VGG19CBAMAttention, VGG19SelfAttention
+from src.models.vgg19 import VGG19Baseline, VGG19SEAttention, VGG19SoftmaxAttention, VGG19CBAMAttention, VGG19SelfAttention, VGG19LoRA
 
 from huggingface_hub import hf_hub_download
 
@@ -93,6 +93,7 @@ def _plot_confusion(all_labels, all_preds, model_name, save_dir="test_eval"):
     '''
     Generate a confusion matrix
     '''
+    os.makedirs(save_dir, exist_ok=True)
     classes = ['glioma', 'meningioma', 'notumor', 'pituitary']
     conf_matrix = confusion_matrix(all_labels, all_preds)
     display = ConfusionMatrixDisplay(conf_matrix, display_labels=classes)
@@ -100,8 +101,12 @@ def _plot_confusion(all_labels, all_preds, model_name, save_dir="test_eval"):
     display.plot(ax=ax, colorbar=False, cmap="Blues")
     ax.set_title(f"Confusion Matrix: {model_name}")
     plt.savefig(f"{save_dir}/confusion_matrix_{model_name}.png")
-    plt.close()    
+    plt.close()
     print(f"Created confusion matrix for {model_name}")
+    print(f"  {'Actual':<12} {'Predicted':<12} {'Count'}")
+    for i, actual in enumerate(classes):
+        for j, predicted in enumerate(classes):
+            print(f"  {actual:<12} {predicted:<12} {conf_matrix[i][j]}")
 
 def _evaluate_all(model, test_loader):
     '''
@@ -132,7 +137,7 @@ def _get_model_backbone(args):
     args.setdefault('reduction', 16)
     args.setdefault('attention_type', None)
     attention = args['attention_type']
-    assert attention in ['softmax', 'se', 'cbam', 'self', None], f"Attention: {attention} not in ['softmax', 'se', 'cbam', 'self', None]"
+    assert attention in ['softmax', 'se', 'cbam', 'self', 'lora', None], f"Attention: {attention} not in ['softmax', 'se', 'cbam', 'self', 'lora', None]"
 
     if attention=='softmax':
         return VGG19SoftmaxAttention()
@@ -142,6 +147,8 @@ def _get_model_backbone(args):
         return VGG19CBAMAttention()
     elif attention=='self':
         return VGG19SelfAttention()
+    elif attention=='lora':
+        return VGG19LoRA(rank=args.get('rank', 8))
     else:
         return VGG19Baseline()
 

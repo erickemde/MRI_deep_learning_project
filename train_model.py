@@ -135,7 +135,7 @@ def main():
         devices=1,
         callbacks=[checkpoint_callback, lr_callback],
         logger=loggers,
-        enable_progress_bar=False,
+        enable_progress_bar=True,
         deterministic="warn",
     )
 

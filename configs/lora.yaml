@@ -1,0 +1,14 @@
+# training arguments
+experiment: lora
+epochs: 20
+batch_size: 64
+lr: 0.001
+weight_decay: 0.0001
+num_workers: 0
+data_dir: data
+
+# gradcam arguments
+generate_gradcam: True
+model_checkpoint_path: checkpoints/vgg19_lora/best.ckpt
+total_examples: 3
+seed: 42

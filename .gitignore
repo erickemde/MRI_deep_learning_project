@@ -23,6 +23,9 @@ lightning_logs/
 wandb
 logs/*/
 
+# Test evaluation results
+test_eval/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
