@@ -5,6 +5,6 @@ lr: 0.001
 num_workers: 0
 data_dir: data
 
-checkpoint_path: None
-total_examples: 3
+model_checkpoint_path: checkpoints/vgg19_self_attention_finetune_aug/best-epoch=27-val_acc=0.9761.ckpt
+total_examples: 30
 seed: 42

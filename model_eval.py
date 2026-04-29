@@ -3,12 +3,15 @@ import os
 
 import torch
 from torch.utils.data import DataLoader
+from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
+import matplotlib.pyplot as plt
+import numpy as np
 
 from src.data.dataset import BrainTumorDataset, load_dataset_from_directory
 from src.data.augmentation import get_val_transforms
 import yaml
 from src.models.LightningWrapper import LightningWrapper
-from src.models.vgg19 import VGG19Baseline, VGG19SEAttention, VGG19SoftmaxAttention
+from src.models.vgg19 import VGG19Baseline, VGG19SEAttention, VGG19SoftmaxAttention, VGG19CBAMAttention, VGG19SelfAttention
 
 from huggingface_hub import hf_hub_download
 
@@ -86,6 +89,41 @@ def _evaluate(model, test_loader):
     acc = correct / total
     return acc
 
+def _plot_confusion(all_labels, all_preds, model_name, save_dir="test_eval"):
+    '''
+    Generate a confusion matrix
+    '''
+    classes = ['glioma', 'meningioma', 'notumor', 'pituitary']
+    conf_matrix = confusion_matrix(all_labels, all_preds)
+    display = ConfusionMatrixDisplay(conf_matrix, display_labels=classes)
+    fig, ax = plt.subplots(figsize=(8,8))
+    display.plot(ax=ax, colorbar=False, cmap="Blues")
+    ax.set_title(f"Confusion Matrix: {model_name}")
+    plt.savefig(f"{save_dir}/confusion_matrix_{model_name}.png")
+    plt.close()    
+    print(f"Created confusion matrix for {model_name}")
+
+def _evaluate_all(model, test_loader):
+    '''
+    Evaluate final model on test set
+    '''
+    model.eval()
+    model.to(DEVICE)
+    correct = 0
+    total = 0
+    all_pred = []
+    all_labels = []
+    with torch.no_grad():
+        for images, labels in test_loader:
+            images, labels = images.to(DEVICE), labels.to(DEVICE)
+            pred = model(images).argmax(dim=1)
+            correct += pred.eq(labels).sum().item()
+            total += labels.size(0)
+            all_pred.extend(pred.cpu().numpy())
+            all_labels.extend(labels.cpu().numpy())
+    acc = correct / total
+    return acc, all_pred, all_labels
+
 def _download_hf_model(repo_id, model_name, ckpt_path, cache_dir):
     print(f"Downloading HuggingFace model: {repo_id}/{model_name}/{ckpt_path}...")
     return hf_hub_download(repo_id=f"{repo_id}/{model_name}", filename = ckpt_path, cache_dir = cache_dir)
@@ -94,12 +132,16 @@ def _get_model_backbone(args):
     args.setdefault('reduction', 16)
     args.setdefault('attention_type', None)
     attention = args['attention_type']
-    assert attention in ['softmax', 'se', None], f"Attention: {attention} not in ['softmax', 'se', None]"
+    assert attention in ['softmax', 'se', 'cbam', 'self', None], f"Attention: {attention} not in ['softmax', 'se', 'cbam', 'self', None]"
 
     if attention=='softmax':
         return VGG19SoftmaxAttention()
     elif attention=='se':
         return VGG19SEAttention(reduction=args['reduction'])
+    elif attention=='cbam':
+        return VGG19CBAMAttention()
+    elif attention=='self':
+        return VGG19SelfAttention()
     else:
         return VGG19Baseline()
 
@@ -124,8 +166,9 @@ def main():
         model = LightningWrapper.load_from_checkpoint(ckpt, model=backbone)
 
         # Evaluate
-        acc = _evaluate(model, test_loader)
+        acc, all_preds, all_labels = _evaluate_all(model, test_loader)
         print(f"Model Name: {model_name}, Checkpoint: {ckpt_path}, Eval accuracy: {acc:.4f}")
+        _plot_confusion(all_labels, all_preds, model_name)
         print("=" * 70)
 
 if __name__ == '__main__':

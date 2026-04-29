@@ -13,6 +13,7 @@ from src.experiments.config import setup_experiment, build_model
 from huggingface_upload import huggingface_upload_model, check_hf_login
 import yaml
 from pathlib import Path
+from src.models.LightningWrapper import LightningWrapper
 
 torch.set_float32_matmul_precision('medium')
 
@@ -158,6 +159,10 @@ def main():
         try:
             checkpoint_stem = Path(checkpoint_callback.best_model_path).stem
             gradcam_save_dir = os.path.join("gradcam_examples", experiment_name, checkpoint_stem)
+            model = LightningWrapper.load_from_checkpoint(
+                checkpoint_callback.best_model_path,
+                model = build_model(config).model
+            )
             model = model.to("cuda" if torch.cuda.is_available() else "cpu")
             gradcam = GradCAM(model, model.gradcam_target_layer)
             gradcam.examples(

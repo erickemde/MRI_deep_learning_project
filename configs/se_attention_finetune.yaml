@@ -4,6 +4,6 @@ batch_size: 64
 lr: 0.001
 num_workers: 0
 data_dir: data
-checkpoint_path: None
-total_examples: 3
+model_checkpoint_path: checkpoints/vgg19_se_attention_finetune/best-epoch=24-val_acc=0.9721.ckpt
+total_examples: 30
 seed: 42

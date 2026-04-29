@@ -6,12 +6,13 @@ from torch import nn
 
 
 class LightningWrapper(pl.LightningModule):
-    def __init__(self, model, lr=1e-3):
+    def __init__(self, model, lr=1e-3, weight_decay=0.0):
         super().__init__()
         self.save_hyperparameters(ignore=["model"])
         self.model = model
         self.loss_fn = nn.CrossEntropyLoss()
         self.lr = lr
+        self.weight_decay = weight_decay
         self.num_classes = model.num_classes if hasattr(model, 'num_classes') else model.fc.out_features
         self.train_acc = Accuracy(task="multiclass", num_classes=self.num_classes)
         self.val_acc = Accuracy(task="multiclass", num_classes=self.num_classes)
@@ -46,7 +47,7 @@ class LightningWrapper(pl.LightningModule):
         return loss
     
     def configure_optimizers(self):
-        optimizer = optim.Adam(self.parameters(), lr=self.hparams.lr)
+        optimizer = optim.Adam(self.parameters(), lr=self.hparams.lr, weight_decay=self.weight_decay)
         
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(
             optimizer, mode='max', factor=0.5, patience=5

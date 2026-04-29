@@ -8,6 +8,6 @@ data_dir: data
 
 # gradcam arguments
 generate_gradcam: True
-checkpoint_path: None
-total_examples: 3
+model_checkpoint_path: checkpoints/vgg19_softmax_attention_finetune_aug/best-epoch=12-val_acc=0.9741.ckpt
+total_examples: 30
 seed: 42
