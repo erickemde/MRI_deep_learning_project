@@ -1,0 +1,58 @@
+experiment: eval
+batch_size: 64
+num_workers: 8
+data_dir: data
+
+models:
+  vgg19_baseline:
+    ckpt_path: checkpoints_original/vgg19_baseline/best-epoch=13-val_acc=0.8964.ckpt
+  vgg19_baseline_aug:
+    ckpt_path: checkpoints_original/vgg19_baseline_aug/best-epoch=24-val_acc=0.8944.ckpt
+  vgg19_cbam:
+    ckpt_path: checkpoints_original/vgg19_cbam/best-epoch=22-val_acc=0.9522.ckpt
+    attention_type: cbam
+  vgg19_cbam_aug:
+    ckpt_path: checkpoints_original/vgg19_cbam_aug/best-epoch=22-val_acc=0.9721.ckpt
+    attention_type: cbam
+  vgg19_cbam_finetune:
+    ckpt_path: checkpoints_original/vgg19_cbam_finetune/best-epoch=18-val_acc=0.9661.ckpt
+    attention_type: cbam
+  vgg19_cbam_finetune_aug:
+    ckpt_path: checkpoints_original/vgg19_cbam_finetune_aug/best-epoch=18-val_acc=0.9741.ckpt
+    attention_type: cbam
+  vgg19_se_attention:
+    ckpt_path: checkpoints_original/vgg19_se_attention/best-epoch=13-val_acc=0.9482.ckpt
+    attention_type: se
+  vgg19_se_attention_aug:
+    ckpt_path: checkpoints_original/vgg19_se_attention_aug/best-epoch=22-val_acc=0.9661.ckpt
+    attention_type: se
+  vgg19_se_attention_finetune:
+    ckpt_path: checkpoints_original/vgg19_se_attention_finetune/best-epoch=24-val_acc=0.9721.ckpt
+    attention_type: se
+  vgg19_se_attention_finetune_aug:
+    ckpt_path: checkpoints_original/vgg19_se_attention_finetune_aug/best-epoch=07-val_acc=0.9701.ckpt
+    attention_type: se
+  vgg19_self_attention:
+    ckpt_path: checkpoints_original/vgg19_self_attention/best-epoch=17-val_acc=0.9542.ckpt
+    attention_type: self
+  vgg19_self_attention_aug:
+    ckpt_path: checkpoints_original/vgg19_self_attention_aug/best-epoch=23-val_acc=0.9721.ckpt
+    attention_type: self
+  vgg19_self_attention_finetune:
+    ckpt_path: checkpoints_original/vgg19_self_attention_finetune/best-epoch=11-val_acc=0.9661.ckpt
+    attention_type: self
+  vgg19_self_attention_finetune_aug:
+    ckpt_path: checkpoints_original/vgg19_self_attention_finetune_aug/best-epoch=27-val_acc=0.9761.ckpt
+    attention_type: self
+  vgg19_softmax_attention:
+    ckpt_path: checkpoints_original/vgg19_softmax_attention/best-epoch=22-val_acc=0.9382.ckpt
+    attention_type: softmax
+  vgg19_softmax_attention_aug:
+    ckpt_path: checkpoints_original/vgg19_softmax_attention_aug/best-epoch=27-val_acc=0.9363.ckpt
+    attention_type: softmax
+  vgg19_softmax_attention_finetune:
+    ckpt_path: checkpoints_original/vgg19_softmax_attention_finetune/best-epoch=18-val_acc=0.9721.ckpt
+    attention_type: softmax
+  vgg19_softmax_attention_finetune_aug:
+    ckpt_path: checkpoints_original/vgg19_softmax_attention_finetune_aug/best-epoch=12-val_acc=0.9741.ckpt
+    attention_type: softmax

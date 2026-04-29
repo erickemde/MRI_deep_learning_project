@@ -30,8 +30,8 @@ def find_and_remove_duplicates(data_dir, remove=True, verbose=True):
 
         print(f"  {class_name}")
 
-        image_files = [f for f in os.listdir(class_path)
-                       if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+        image_files = sorted([f for f in os.listdir(class_path)
+               if f.lower().endswith(('.jpg', '.jpeg', '.png'))])
 
         initial_count = len(image_files)
         hash_dict = {}
@@ -103,8 +103,8 @@ def split_training_to_train_val(training_dir, output_dir, val_ratio=0.1, seed=42
         os.makedirs(os.path.join(train_dir, class_name), exist_ok=True)
         os.makedirs(os.path.join(val_dir, class_name), exist_ok=True)
 
-        image_files = [f for f in os.listdir(class_path)
-                       if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+        image_files = sorted([f for f in os.listdir(class_path)
+               if f.lower().endswith(('.jpg', '.jpeg', '.png'))])
 
         np.random.shuffle(image_files)
 
@@ -166,8 +166,9 @@ def prepare_testing_data(testing_dir, output_dir, remove_duplicates=True):
 
         os.makedirs(os.path.join(test_output_dir, class_name), exist_ok=True)
 
-        image_files = [f for f in os.listdir(class_path)
-                       if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+        image_files = sorted([f for f in os.listdir(class_path)
+               if f.lower().endswith(('.jpg', '.jpeg', '.png'))])
+
 
         for img_file in image_files:
             shutil.copy2(os.path.join(class_path, img_file),

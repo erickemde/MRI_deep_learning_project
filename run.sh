@@ -6,7 +6,7 @@ rm -rf checkpoints/
 mkdir -p checkpoints
 echo "Done."
 
-export WANDB_MODE=offline
+# export WANDB_MODE=offline
 mkdir -p logs
 
 echo "[1/18] Starting Baseline..."
