@@ -26,4 +26,5 @@ dependencies:
       - opencv-python
       - scikit-learn
       - huggingface_hub
+      - loralib
 

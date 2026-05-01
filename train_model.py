@@ -135,7 +135,7 @@ def main():
         devices=1,
         callbacks=[checkpoint_callback, lr_callback],
         logger=loggers,
-        enable_progress_bar=False,
+        enable_progress_bar=True,
         deterministic="warn",
     )
 
@@ -166,9 +166,11 @@ def main():
             model = model.to("cuda" if torch.cuda.is_available() else "cpu")
             gradcam = GradCAM(model, model.gradcam_target_layer)
             gradcam.examples(
-                dataloader=val_loader,
+                data_subset="val",
                 save_dir=gradcam_save_dir,
                 total_examples=config["total_examples"],
+                batch_size=config["batch_size"],
+                num_workers=config["num_workers"],
                 seed=config["seed"]
             )
         except Exception as e:

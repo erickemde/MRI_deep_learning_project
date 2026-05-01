@@ -56,3 +56,7 @@ models:
   vgg19_softmax_attention_finetune_aug:
     ckpt_path: checkpoints_original/vgg19_softmax_attention_finetune_aug/best-epoch=12-val_acc=0.9741.ckpt
     attention_type: softmax
+  vgg19_lora:
+    ckpt_path: checkpoints/vgg19_lora/best-epoch=16-val_acc=0.9641.ckpt
+    attention_type: lora
+    rank: 8

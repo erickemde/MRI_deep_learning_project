@@ -4,7 +4,8 @@ from src.models.vgg19 import (
     VGG19SEAttention, 
     VGG19SoftmaxAttention,
     VGG19CBAMAttention,
-    VGG19SelfAttention
+    VGG19SelfAttention,
+    VGG19LoRA
 )
 
 EXPERIMENTS = {
@@ -75,6 +76,8 @@ EXPERIMENTS = {
     "self_attention_finetune_aug": (
         "vgg19_self_attention_finetune_aug", "VGG19 + Self Attention (Fine-tune) + Aug", True, VGG19SelfAttention, {"unfreeze_from_layer": 40}
     ),
+    # ── LoRA ────────────────────────────────────────────────────────
+    "lora": ("vgg19_lora", "VGG19 + LoRA", False, VGG19LoRA, {"rank": 8})
 }
 
 
@@ -101,7 +104,7 @@ def setup_experiment(config):
 def build_model(config):
     model = config["model_class"](pretrained=True, **config["model_kwargs"])
     print("\tModel:", config["model_description"])
-    return LightningWrapper(model, lr=config["lr"])
+    return LightningWrapper(model, lr=config["lr"], weight_decay=config.get("weight_decay", 0.0))
 
 
 def setup_ablation_study(config):

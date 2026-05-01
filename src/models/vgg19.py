@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.models import vgg19_bn, VGG19_BN_Weights
+import loralib as lora
 
 
 class SoftmaxAttention(nn.Module):
@@ -288,3 +289,42 @@ class VGG19SelfAttention(nn.Module):
     @property
     def gradcam_target_layer(self):
         return self.model.features[-4]
+    
+class VGG19LoRA(nn.Module):
+    def __init__(self, num_classes=4, rank=8, pretrained=True):
+        super().__init__()
+        self.num_classes = num_classes
+        vgg = vgg19_bn(weights=VGG19_BN_Weights.IMAGENET1K_V1 if pretrained else None)
+        
+        # Swap Conv2d layers with LoRA versions (preserves pretrained weights)
+        for name, module in vgg.features.named_children():
+            if isinstance(module, nn.Conv2d):
+                lora_conv = lora.Conv2d(module.in_channels, module.out_channels,
+                                        module.kernel_size[0], r=rank,
+                                        padding=module.padding[0])
+                lora_conv.conv.weight.data = module.weight.data
+                vgg.features[int(name)] = lora_conv
+        
+        lora.mark_only_lora_as_trainable(vgg)  # freeze everything except LoRA matrices
+        self.features = vgg.features
+        self.classifier = nn.Sequential(
+            nn.AdaptiveAvgPool2d((7,7)),
+            nn.Flatten(),
+            nn.Linear(512 * 7 * 7, 512),
+            nn.ReLU(True),  
+            nn.Dropout(0.5),
+            nn.Linear(512, num_classes)
+        )
+        total_params     = sum(p.numel() for p in self.parameters())
+        trainable_params = sum(p.numel() for p in self.parameters() if p.requires_grad)
+        frozen_params    = total_params - trainable_params
+        print(f"[INFO] LoRA rank={rank} | Frozen: {frozen_params/1e6:.1f}M params | Trainable: {trainable_params/1e3:.1f}K params of total {total_params/1e6:.1f}M")
+
+    def forward(self, x):
+        x = self.features(x)
+        x = self.classifier(x)
+        return x
+    
+    @property
+    def gradcam_target_layer(self):
+        return self.features[-4]
