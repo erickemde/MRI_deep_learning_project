@@ -4,6 +4,10 @@ batch_size: 64
 num_workers: 1
 data_dir: data
 
+# gradcam arguments
+total_examples: 10
+seed: 42
+
 ## huggingface models to evaluate
 repo_id: gatech-deep-learning-project
 

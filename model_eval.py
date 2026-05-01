@@ -12,6 +12,7 @@ from src.data.augmentation import get_val_transforms
 import yaml
 from src.models.LightningWrapper import LightningWrapper
 from src.models.vgg19 import VGG19Baseline, VGG19SEAttention, VGG19SoftmaxAttention, VGG19CBAMAttention, VGG19SelfAttention, VGG19LoRA
+from src.visualization.gradcam import GradCAM
 
 from huggingface_hub import hf_hub_download
 
@@ -177,6 +178,23 @@ def main():
         print(f"Model Name: {model_name}, Checkpoint: {ckpt_path}, Eval accuracy: {acc:.4f}")
         _plot_confusion(all_labels, all_preds, model_name)
         print("=" * 70)
+        
+        print("\n" + "=" * 70)
+        print("GENERATING GRADCAM VISUALIZATIONS")
+        print("=" * 70)
+
+        try:
+            gradcam_save_dir = os.path.join("gradcam_examples", "test", model_name, ckpt_path)
+            model = model.to("cuda" if torch.cuda.is_available() else "cpu")
+            gradcam = GradCAM(model, model.gradcam_target_layer)
+            gradcam.examples(
+                dataloader=test_loader,
+                save_dir=gradcam_save_dir,
+                total_examples=config["total_examples"],
+                seed=config["seed"]
+            )
+        except Exception as e:
+            print(f"[WARNING] GradCAM visualization failed: {e}")
 
 if __name__ == '__main__':
     main()
