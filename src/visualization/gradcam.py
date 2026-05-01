@@ -1,5 +1,6 @@
 import torch
 import torch.nn.functional as F
+from torch.utils.data import DataLoader
 from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,6 +11,8 @@ from tqdm import tqdm
 import argparse
 
 from src.data.augmentation import get_val_transforms
+from src.data.dataset import BrainTumorDataset, load_dataset_from_directory
+
 
 class GradCAM:
     def __init__(self, model, target_layer):
@@ -117,9 +120,11 @@ class GradCAM:
     
     def examples(
             self, 
-            dataloader, 
+            data_subset = "val", 
             save_dir="gradcam", 
             total_examples = 3, 
+            batch_size = 64,
+            num_workers = 0,
             seed=42
         ):
         """
@@ -128,15 +133,38 @@ class GradCAM:
         2. Compute Confusion Matrix for Model
         3. Generate Grad Cam Examples for misclassified examples
         """
-
-        # set random seed and create save_dir
+        # set random seed
         random.seed(seed)
+        
+        data_dir = Path("data")/data_subset
+        
+        test_paths, test_labels = load_dataset_from_directory(
+            data_dir="data",
+            split='test'
+        )
+
+        val_transform = get_val_transforms()
+
+        dataset = BrainTumorDataset(
+            image_paths=test_paths,
+            labels=test_labels,
+            transform=val_transform
+        )
+
+        dataloader = DataLoader(
+            dataset,
+            batch_size=batch_size,
+            shuffle=False,
+            num_workers=num_workers,
+            pin_memory=True
+        )
+
         Path(save_dir).mkdir(parents=True, exist_ok=True)
         classes = ['glioma', 'meningioma', 'notumor', 'pituitary']
 
         # gradcam examples per class
         for cls in tqdm(classes, desc="Generating GradCAM Examples by Class"):
-            cls_dir = Path("data/val")/cls
+            cls_dir = data_dir/cls
             cls_img_paths = random.sample(list(cls_dir.glob("*.jpg")), total_examples)
             save_path = Path(save_dir)/"gradcam"/cls
             save_path.mkdir(parents=True, exist_ok=True)
@@ -151,7 +179,7 @@ class GradCAM:
         misclassified_dir = Path(save_dir)/"misclassified"
         misclassified_dir.mkdir(parents=True, exist_ok=True)
 
-        image_paths = list(Path("data/val").rglob("*.jpg"))
+        image_paths = list(data_dir.rglob("*.jpg"))
         random.shuffle(image_paths)
         total_wrong = 0
         with tqdm(total=total_examples, desc="Generating Misclassified Examples") as pbar:
