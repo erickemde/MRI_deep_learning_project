@@ -12,26 +12,24 @@ seed: 42
 repo_id: gatech-deep-learning-project
 
 models:
-  vgg19_softmax_attention_finetune:
-    ckpt_path: best-epoch=14-val_acc=0.9900.ckpt
+  # vgg19_softmax_attention_finetune:
+  #   ckpt_path: best-epoch=14-val_acc=0.9900.ckpt
+  #   attention_type: softmax
+  # vgg19_softmax_attention_finetune_aug:
+  #   ckpt_path: best-epoch=24-val_acc=0.9880.ckpt
+  #   attention_type: softmax
+  # vgg19_cbam_finetune_aug:
+  #   ckpt_path: best-epoch=27-val_acc=0.9880.ckpt
+  #   attention_type: cbam
+  # vgg19_se_attention_finetune_aug:
+  #   ckpt_path: best-epoch=13-val_acc=0.9841.ckpt
+  #   attention_type: se
+  # vgg19_self_attention_finetune_aug:
+  #   ckpt_path: best-epoch=22-val_acc=0.9841.ckpt
+  #   attention_type: self
+  # vgg19_cbam_finetune:
+  #   ckpt_path: best-epoch=04-val_acc=0.9821.ckpt
+  #   attention_type: cbam
+  vgg19_softmax_attention_finetune_v2:
+    ckpt_path: best-epoch=23-val_acc=0.9880.ckpt
     attention_type: softmax
-  vgg19_softmax_attention_finetune_aug:
-    ckpt_path: best-epoch=24-val_acc=0.9880.ckpt
-    attention_type: softmax
-  vgg19_cbam_finetune_aug:
-    ckpt_path: best-epoch=27-val_acc=0.9880.ckpt
-    attention_type: cbam
-  vgg19_se_attention_finetune_aug:
-    ckpt_path: best-epoch=13-val_acc=0.9841.ckpt
-    attention_type: se
-  vgg19_self_attention_finetune_aug:
-    ckpt_path: best-epoch=22-val_acc=0.9841.ckpt
-    attention_type: self
-  vgg19_cbam_finetune:
-    ckpt_path: best-epoch=04-val_acc=0.9821.ckpt
-    attention_type: cbam
-  vgg19_lora:
-    ckpt_path: best-epoch=16-val_acc=0.9641.ckpt
-    attention_type: lora
-    rank: 8
-
