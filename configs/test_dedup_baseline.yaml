@@ -1,0 +1,8 @@
+experiment: eval
+batch_size: 64
+num_workers: 0
+data_dir: data
+
+models:
+  vgg19_baseline:
+    ckpt_path: /home/gtubt-lab1/sandbox/deep_learning_project/checkpoints/vgg19_baseline/best-epoch=28-val_acc=0.8984.ckpt

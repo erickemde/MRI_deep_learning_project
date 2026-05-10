@@ -1,0 +1,11 @@
+experiment: eval
+batch_size: 64
+num_workers: 0
+data_dir: data_raw_split
+
+models:
+  vgg19_baseline:
+    ckpt_path: checkpoints/vgg19_baseline/best-epoch=17-val_acc=0.9143.ckpt
+  vgg19_se_attention_finetune_aug:
+    ckpt_path: checkpoints/vgg19_se_attention_finetune_aug/best-epoch=22-val_acc=0.9741.ckpt
+    attention_type: se
