@@ -1,6 +1,11 @@
 # deep_learning_project
 Project Repo for CS7643 (Deep Learning)
 
+## Authors
+----------
+Roman Emde, Alex Gelpi, Man Young Lee, Michael Southard  
+Georgia Institute of Technology
+
 # Documentation
 ## Connect to PACE-ICE (Optional)
 1. Follow instructions [PACE-ICE GPU Resources](https://edstem.org/us/courses/89061/discussion/7602224)
