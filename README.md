@@ -2,7 +2,6 @@
 Project Repo for CS7643 (Deep Learning)
 
 ## Authors
-----------
 Roman Emde, Alex Gelpi, Man Young Lee, Michael Southard  
 Georgia Institute of Technology
 
